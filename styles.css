@@ -1,0 +1,58 @@
+/* EcoSnap custom styles (Tailwind utilities come from the CDN build) */
+
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f4fbf7;
+            color: #1a2e22;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(76, 175, 80, 0.18);
+        }
+
+        .scan-overlay-line {
+            animation: scanLine 2s linear infinite;
+        }
+
+        @keyframes scanLine {
+            0% { top: 2%; opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { top: 92%; opacity: 0.8; }
+        }
+
+        @keyframes floatPoints {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.9); }
+        }
+
+        .animate-float-points {
+            animation: floatPoints 1.2s ease-out forwards;
+        }
+
+        /* Custom bin hover scale */
+        .bin-card {
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .bin-card:hover {
+            transform: translateY(-6px) scale(1.02);
+        }
+
+        .pulse-subtle {
+            animation: pulseSubtle 2s ease-in-out infinite;
+        }
+        @keyframes pulseSubtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+    :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(5rem + env(safe-area-inset-top,0px))}
+header.sticky{top:env(safe-area-inset-top,0px)}
+:focus-visible{outline:2px solid #43a047;outline-offset:2px}
+.field{width:100%;border:1px solid #cfe3d3;background:#fff;border-radius:.875rem;padding:.8rem 1rem;font-size:.875rem;font-weight:500;transition:border-color .15s,box-shadow .15s}
+.field:focus{outline:none;border-color:#43a047;box-shadow:0 0 0 4px rgba(76,175,80,.18)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

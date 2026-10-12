@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1b5e20">
+    <title>EcoSnap: AI Smart Recycling & Waste Classifier</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Canvas Confetti for Celebration Effects -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Chart.js for Impact Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        eco: {
+                            50: '#e8f5e9',
+                            100: '#c8e6c9',
+                            200: '#a5d6a7',
+                            500: '#4caf50',
+                            600: '#43a047',
+                            700: '#388e3c',
+                            800: '#2e7d32',
+                            900: '#1b5e20',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f4fbf7;
+            color: #1a2e22;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(76, 175, 80, 0.18);
+        }
+
+        .scan-overlay-line {
+            animation: scanLine 2s linear infinite;
+        }
+
+        @keyframes scanLine {
+            0% { top: 2%; opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { top: 92%; opacity: 0.8; }
+        }
+
+        @keyframes floatPoints {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.9); }
+        }
+
+        .animate-float-points {
+            animation: floatPoints 1.2s ease-out forwards;
+        }
+
+        /* Custom bin hover scale */
+        .bin-card {
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .bin-card:hover {
+            transform: translateY(-6px) scale(1.02);
+        }
+
+        .pulse-subtle {
+            animation: pulseSubtle 2s ease-in-out infinite;
+        }
+        @keyframes pulseSubtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+    .fa-solid,.fa-regular{display:inline-block;width:1em;height:1em;vertical-align:-.125em;background-color:currentColor;-webkit-mask:var(--fa) center/contain no-repeat;mask:var(--fa) center/contain no-repeat}.fa-spin{animation:faspin 1s linear infinite}@keyframes faspin{to{transform:rotate(360deg)}}
+.fa-apple-whole{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M224 112c-8.8 0-16-7.2-16-16V80c0-44.2 35.8-80 80-80h16c8.8 0 16 7.2 16 16v16c0 44.2-35.8 80-80 80zM0 288c0-76.3 35.7-160 112-160 27.3 0 59.7 10.3 82.7 19.3 18.8 7.3 39.9 7.3 58.7 0 22.9-8.9 55.4-19.3 82.7-19.3 76.3 0 112 83.7 112 160 0 128-80 224-160 224-16.5 0-38.1-6.6-51.5-11.3-8.1-2.8-16.9-2.8-25 0-13.4 4.7-35 11.3-51.5 11.3-80 0-160-96-160-224z'/%3E%3C/svg%3E")}.fa-bars{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M0 96c0-17.7 14.3-32 32-32h384c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32m0 160c0-17.7 14.3-32 32-32h384c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32m448 160c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h384c17.7 0 32 14.3 32 32'/%3E%3C/svg%3E")}.fa-bottle-water{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath d='M112-32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32h-96C94.3 32 80 17.7 80 0s14.3-32 32-32M16 144c0-35.3 28.7-64 64-64h160c35.3 0 64 28.7 64 64 0 24.1-13.3 45.1-33 56 19.7 10.9 33 31.9 33 56s-13.3 45.1-33 56c19.7 10.9 33 31.9 33 56s-13.3 45.1-33 56c19.7 10.9 33 31.9 33 56 0 35.3-28.7 64-64 64H80c-35.3 0-64-28.7-64-64 0-24.1 13.3-45.1 33-56-19.7-10.9-33-31.9-33-56s13.3-45.1 33-56c-19.7-10.9-33-31.9-33-56s13.3-45.1 33-56c-19.7-10.9-33-31.9-33-56'/%3E%3C/svg%3E")}.fa-box{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='m369.4 128-34.3-48H113l-34.3 48zM0 148.5c0-13.3 4.2-26.3 11.9-37.2l49-68.5C72.9 26 92.3 16 112.9 16H335c20.7 0 40.1 10 52.1 26.8l48.9 68.5c7.8 10.9 11.9 23.9 11.9 37.2L448 416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64z'/%3E%3C/svg%3E")}.fa-bullseye{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M448 256a192 192 0 1 0-384 0 192 192 0 1 0 384 0M0 256a256 256 0 1 1 512 0 256 256 0 1 1-512 0m256 80a80 80 0 1 0 0-160 80 80 0 1 0 0 160m0-224a144 144 0 1 1 0 288 144 144 0 1 1 0-288m-32 144a32 32 0 1 1 64 0 32 32 0 1 1-64 0'/%3E%3C/svg%3E")}.fa-camera{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M149.1 64.8 138.7 96H64c-35.3 0-64 28.7-64 64v256c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64h-74.7l-10.4-31.2C356.4 45.2 338.1 32 317.4 32H194.6c-20.7 0-39 13.2-45.5 32.8M256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192'/%3E%3C/svg%3E")}.fa-car-battery{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M80 64c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32h96c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32h16c35.3 0 64 28.7 64 64v256c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128c0-35.3 28.7-64 64-64zm312 120c0-13.3-10.7-24-24-24s-24 10.7-24 24v32h-32c-13.3 0-24 10.7-24 24s10.7 24 24 24h32v32c0 13.3 10.7 24 24 24s24-10.7 24-24v-32h32c13.3 0 24-10.7 24-24s-10.7-24-24-24h-32zM64 240c0 13.3 10.7 24 24 24h112c13.3 0 24-10.7 24-24s-10.7-24-24-24H88c-13.3 0-24 10.7-24 24'/%3E%3C/svg%3E")}.fa-chart-pie{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='M512.4 240h-176c-17.7 0-32-14.3-32-32V32c0-17.7 14.4-32.2 31.9-29.9 107 14.2 191.8 99 206 206 2.3 17.5-12.2 31.9-29.9 31.9M222.6 37.2c18.1-3.8 33.8 11 33.8 29.5V264c0 5.6 2 11 5.5 15.3L394 438.7c11.7 14.1 9.2 35.4-6.9 44.1C353 501.4 313.9 512 272.4 512c-132.5 0-240-107.5-240-240 0-115.5 81.5-211.9 190.2-234.8M477.8 288h64c18.5 0 33.3 15.7 29.5 33.8-10.2 48.4-35 91.4-69.6 124.2-12.3 11.7-31.6 9.2-42.4-3.9l-84.4-101.7c-17.3-20.9-2.4-52.4 24.6-52.4h78.2z'/%3E%3C/svg%3E")}.fa-check{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M434.8 70.1c14.3 10.4 17.5 30.4 7.1 44.7l-256 352c-5.5 7.6-14 12.3-23.4 13.1s-18.5-2.7-25.1-9.3l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l101.5 101.5 234-321.7c10.4-14.3 30.4-17.5 44.7-7.1z'/%3E%3C/svg%3E")}.fa-circle{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M0 256a256 256 0 1 1 512 0 256 256 0 1 1-512 0'/%3E%3C/svg%3E")}.fa-circle-check{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512m118-366.3c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8l135.9-187c7.8-10.7 5.4-25.7-5.3-33.5'/%3E%3C/svg%3E")}.fa-circle-info{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512m-32-352a32 32 0 1 1 64 0 32 32 0 1 1-64 0m-8 64h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24h-80c-13.3 0-24-10.7-24-24s10.7-24 24-24h24v-64h-24c-13.3 0-24-10.7-24-24s10.7-24 24-24'/%3E%3C/svg%3E")}.fa-clock-rotate-left{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='M288 64c106 0 192 86 192 192s-86 192-192 192c-65.2 0-122.9-32.5-157.6-82.3-10.1-14.5-30.1-18-44.6-7.9s-18 30.1-7.9 44.6C124.1 468.6 201 512 288 512c141.4 0 256-114.6 256-256S429.4 0 288 0C202.3 0 126.5 42.1 80 106.7V80c0-17.7-14.3-32-32-32S16 62.3 16 80v112c0 17.7 14.3 32 32 32h112.1c17.7 0 32-14.3 32-32s-14.3-32-32-32h-38.3C154.9 102.6 217 64 288 64m24 88c0-13.3-10.7-24-24-24s-24 10.7-24 24v104c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152z'/%3E%3C/svg%3E")}.fa-cloud-arrow-down{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='M144 480C64.5 480 0 415.5 0 336c0-63.4 41-117.2 97.9-136.5C96.6 191.8 96 184 96 176c0-79.5 64.5-144 144-144 55.4 0 103.5 31.3 127.6 77.1C381.8 100.8 398.4 96 416 96c53 0 96 43 96 96 0 15.7-3.8 30.6-10.5 43.7C545.5 256 576 300.4 576 352c0 70.7-57.3 128-128 128zm233-167c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-31 31V208c0-13.3-10.7-24-24-24s-24 10.7-24 24v102.1l-31-31c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c9.4 9.4 24.6 9.4 33.9 0l72-72z'/%3E%3C/svg%3E")}.fa-cloud-arrow-up{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='M144 480C64.5 480 0 415.5 0 336c0-63.4 41-117.2 97.9-136.5C96.6 191.8 96 184 96 176c0-79.5 64.5-144 144-144 55.4 0 103.5 31.3 127.6 77.1C381.8 100.8 398.4 96 416 96c53 0 96 43 96 96 0 15.7-3.8 30.6-10.5 43.7C545.5 256 576 300.4 576 352c0 70.7-57.3 128-128 128zm161-289c-9.4-9.4-24.6-9.4-33.9 0l-72 72c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l31-31V368c0 13.3 10.7 24 24 24s24-10.7 24-24V265.9l31 31c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-72-72z'/%3E%3C/svg%3E")}.fa-dumpster{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='m132.3 64-25.6 128H24c-13.3 0-24-10.7-24-24v-4.1c0-2.6.4-5.1 1.2-7.6l25.3-75.9C29.8 70.6 39 64 49.3 64zm23.4 128 25.6-128H264v128zM312 64h82.7l25.6 128H312zm131.7 0h83c10.3 0 19.5 6.6 22.8 16.4l25.3 75.9c.8 2.4 1.2 5 1.2 7.6v4.1c0 13.3-10.7 24-24 24h-82.7zm-418 176h524.7c-.4 2.1-13.3 73.4-38.9 213.7-3 16.3-17.9 27.6-34.4 26.1S448 464.6 448 448v-16H128v16c0 16.6-12.6 30.4-29.1 31.9s-31.4-9.9-34.4-26.2C39 313.3 26 242.1 25.7 240'/%3E%3C/svg%3E")}.fa-gamepad{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'%3E%3Cpath d='M448 64c106 0 192 86 192 192s-86 192-192 192H192C86 448 0 362 0 256S86 64 192 64zM192 176c-13.3 0-24 10.7-24 24v32h-32c-13.3 0-24 10.7-24 24s10.7 24 24 24h32v32c0 13.3 10.7 24 24 24s24-10.7 24-24v-32h32c13.3 0 24-10.7 24-24s-10.7-24-24-24h-32v-32c0-13.3-10.7-24-24-24m240 96a32 32 0 1 0 0 64 32 32 0 1 0 0-64m64-96a32 32 0 1 0 0 64 32 32 0 1 0 0-64'/%3E%3C/svg%3E")}.fa-hand-pointer{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M128 40c0-22.1 17.9-40 40-40s40 17.9 40 40v148.2c8.5-7.6 19.7-12.2 32-12.2 20.6 0 38.2 13 45 31.2 8.8-9.3 21.2-15.2 35-15.2 25.3 0 46 19.5 47.9 44.3 8.5-7.7 19.8-12.3 32.1-12.3 26.5 0 48 21.5 48 48v112c0 70.7-57.3 128-128 128h-85.3c-5 0-9.9-.3-14.7-1-55.3-5.6-106.2-34-140-79L8 336c-13.3-17.7-9.7-42.7 8-56s42.7-9.7 56 8l56 74.7zm112 264c0-8.8-7.2-16-16-16s-16 7.2-16 16v96c0 8.8 7.2 16 16 16s16-7.2 16-16zm48-16c-8.8 0-16 7.2-16 16v96c0 8.8 7.2 16 16 16s16-7.2 16-16v-96c0-8.8-7.2-16-16-16m80 16c0-8.8-7.2-16-16-16s-16 7.2-16 16v96c0 8.8 7.2 16 16 16s16-7.2 16-16z'/%3E%3C/svg%3E")}.fa-house{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M277.8 8.6c-12.3-11.4-31.3-11.4-43.5 0l-224 208c-9.6 9-12.8 22.9-8 35.1S18.8 272 32 272h16v176c0 35.3 28.7 64 64 64h288c35.3 0 64-28.7 64-64V272h16c13.2 0 25-8.1 29.8-20.3s1.6-26.2-8-35.1zM240 320h32c26.5 0 48 21.5 48 48v96H192v-96c0-26.5 21.5-48 48-48'/%3E%3C/svg%3E")}.fa-leaf{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M471.3 6.7c6.4-6.1 15.7-8.3 24.3-5.5C505.4 4.5 512 13.7 512 24v186.9C512 342.1 403.9 448 273.2 448c-77 0-143.4-49.5-167.5-118.7C70.3 360.1 48 405.4 48 456c0 13.3-10.7 24-24 24S0 469.3 0 456c0-74.9 38.2-140.9 96.1-179.7C131.4 252.7 173.5 240 216 240h80c13.3 0 24-10.7 24-24s-10.7-24-24-24h-80c-39.7 0-77.3 8.8-111 24.5C128.3 146.5 194.2 96 272 96c66.4 0 115.8-22.1 148.7-44 19.2-12.8 35.5-28.1 50.7-45.3z'/%3E%3C/svg%3E")}.fa-list-check{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M133.8 36.3c10.9 7.6 13.5 22.6 5.9 33.4l-56 80c-4.1 5.8-10.5 9.5-17.6 10.1S52 158 47 153L7 113c-9.3-9.4-9.3-24.6 0-34s24.6-9.3 34 0l19.8 19.8 39.6-56.6c7.6-10.9 22.6-13.5 33.4-5.9m0 160c10.9 7.6 13.5 22.6 5.9 33.4l-56 80c-4.1 5.8-10.5 9.5-17.6 10.1S52 318 47 313L7 273c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l19.8 19.8 39.6-56.6c7.6-10.9 22.6-13.5 33.4-5.9zM224 96c0-17.7 14.3-32 32-32h224c17.7 0 32 14.3 32 32s-14.3 32-32 32H256c-17.7 0-32-14.3-32-32m0 160c0-17.7 14.3-32 32-32h224c17.7 0 32 14.3 32 32s-14.3 32-32 32H256c-17.7 0-32-14.3-32-32m-64 160c0-17.7 14.3-32 32-32h288c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32-14.3-32-32m-96-40a40 40 0 1 1 0 80 40 40 0 1 1 0-80'/%3E%3C/svg%3E")}.fa-microchip{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M176 24c0-13.3-10.7-24-24-24s-24 10.7-24 24v40c-35.3 0-64 28.7-64 64H24c-13.3 0-24 10.7-24 24s10.7 24 24 24h40v56H24c-13.3 0-24 10.7-24 24s10.7 24 24 24h40v56H24c-13.3 0-24 10.7-24 24s10.7 24 24 24h40c0 35.3 28.7 64 64 64v40c0 13.3 10.7 24 24 24s24-10.7 24-24v-40h56v40c0 13.3 10.7 24 24 24s24-10.7 24-24v-40h56v40c0 13.3 10.7 24 24 24s24-10.7 24-24v-40c35.3 0 64-28.7 64-64h40c13.3 0 24-10.7 24-24s-10.7-24-24-24h-40v-56h40c13.3 0 24-10.7 24-24s-10.7-24-24-24h-40v-56h40c13.3 0 24-10.7 24-24s-10.7-24-24-24h-40c0-35.3-28.7-64-64-64V24c0-13.3-10.7-24-24-24s-24 10.7-24 24v40h-56V24c0-13.3-10.7-24-24-24s-24 10.7-24 24v40h-56zm-16 104h192c17.7 0 32 14.3 32 32v192c0 17.7-14.3 32-32 32H160c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32m16 48v160h160V176z'/%3E%3C/svg%3E")}.fa-plus{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M256 64c0-17.7-14.3-32-32-32s-32 14.3-32 32v160H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h160v160c0 17.7 14.3 32 32 32s32-14.3 32-32V288h160c17.7 0 32-14.3 32-32s-14.3-32-32-32H256z'/%3E%3C/svg%3E")}.fa-qrcode{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M64 160h64V96H64zM0 80c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48zm64 336h64v-64H64zM0 336c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48zM320 96v64h64V96zm-16-64h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48h-96c-26.5 0-48-21.5-48-48V80c0-26.5 21.5-48 48-48m-16 320a32 32 0 1 1 0-64 32 32 0 1 1 0 64m0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32m96 32c0-17.7 14.3-32 32-32s32 14.3 32 32-14.3 32-32 32-32-14.3-32-32m32-96a32 32 0 1 1 0-64 32 32 0 1 1 0 64m-32 32a32 32 0 1 1-64 0 32 32 0 1 1 64 0'/%3E%3C/svg%3E")}.fa-recycle{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M152.3 60c46.2-80 161.7-80 207.9 0l37.3 64.6 27.7-16c8.4-4.9 18.9-4.2 26.6 1.7s11.1 15.9 8.6 25.3L436.9 223c-3.4 12.8-16.6 20.4-29.4 17l-87.4-23.4c-9.4-2.5-16.3-10.4-17.6-20s3.4-19.1 11.8-23.9l27.7-16-37.3-64.6c-21.6-37.3-75.4-37.3-97 0l-5.3 9.1c-8.8 15.3-28.4 20.5-43.7 11.7S138.2 84.5 147 69.1zm297.4 219.1c15.3-8.8 34.9-3.6 43.7 11.7l5.3 9.1c46.2 80-11.5 180-103.9 180h-74.6v32c0 9.7-5.8 18.5-14.8 22.2s-19.3 1.7-26.2-5.2l-64-64c-9.4-9.4-9.4-24.6 0-33.9l64-64c6.9-6.9 17.2-8.9 26.2-5.2s14.8 12.5 14.8 22.2v32h74.6c43.1 0 70.1-46.7 48.5-84l-5.3-9.1c-8.8-15.3-3.6-34.9 11.7-43.7zM51 235.4l-27.7-16c-8.4-4.9-13.1-14.3-11.8-23.9s8.2-17.5 17.6-20l87.4-23.5c12.8-3.4 26 4.2 29.4 17l23.4 87.4c2.5 9.4-.9 19.3-8.6 25.3s-18.2 6.6-26.6 1.7l-27.7-16L69.1 332c-21.6 37.3 5.4 84 48.5 84h10.6c17.7 0 32 14.3 32 32s-14.3 32-32 32h-10.6c-92.3 0-150-100-103.8-180z'/%3E%3C/svg%3E")}.fa-seedling{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M512 32c0 108.1-76.6 198.3-178.4 219.4-7.9-58.1-34-110.4-72.5-150.9C301.2 40 369.9 0 448 0h32c17.7 0 32 14.3 32 32M0 96c0-17.7 14.3-32 32-32h32c123.7 0 224 100.3 224 224v192c0 17.7-14.3 32-32 32s-32-14.3-32-32V320C100.3 320 0 219.7 0 96'/%3E%3C/svg%3E")}.fa-soap{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M208-32a48 48 0 1 1 0 96 48 48 0 1 1 0-96M320 96a64 64 0 1 1 0 128 64 64 0 1 1 0-128m32-96a32 32 0 1 1 64 0 32 32 0 1 1-64 0M96 160h112c0 23.8 7.4 45.9 20.1 64H160c-53 0-96 43-96 96s43 96 96 96h192c53 0 96-43 96-96 0-35.1-18.9-65.9-47-82.6 19-19.8 30.7-46.6 31-76.1 45.4 7.6 80 47.1 80 94.7v128c0 53-43 96-96 96H96c-53 0-96-43-96-96V256c0-53 43-96 96-96m64 112h192c26.5 0 48 21.5 48 48s-21.5 48-48 48H160c-26.5 0-48-21.5-48-48s21.5-48 48-48'/%3E%3C/svg%3E")}.fa-star{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='M309.5-18.9c-4.1-8-12.4-13.1-21.4-13.1s-17.3 5.1-21.4 13.1l-73.6 144.2-159.9 25.4c-8.9 1.4-16.3 7.7-19.1 16.3s-.5 18 5.8 24.4l114.4 114.5-25.2 159.9c-1.4 8.9 2.3 17.9 9.6 23.2s16.9 6.1 25 2l144.4-73.4L432.4 491c8 4.1 17.7 3.3 25-2s11-14.2 9.6-23.2l-25.3-159.9 114.4-114.5c6.4-6.4 8.6-15.8 5.8-24.4s-10.1-14.9-19.1-16.3L383 125.3z'/%3E%3C/svg%3E")}.fa-trash{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M136.7 5.9 128 32H32C14.3 32 0 46.3 0 64s14.3 32 32 32h384c17.7 0 32-14.3 32-32s-14.3-32-32-32h-96l-8.7-26.1C306.9-7.2 294.7-16 280.9-16H167.1c-13.8 0-26 8.8-30.4 21.9M416 144H32l21.1 323.1C54.7 492.4 75.7 512 101 512h246c25.3 0 46.3-19.6 47.9-44.9z'/%3E%3C/svg%3E")}.fa-triangle-exclamation{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M256 0c14.7 0 28.2 8.1 35.2 21l216 400c6.7 12.4 6.4 27.4-.8 39.5S486.1 480 472 480H40c-14.1 0-27.2-7.4-34.4-19.5s-7.5-27.1-.8-39.5l216-400c7-12.9 20.5-21 35.2-21m0 352a32 32 0 1 0 0 64 32 32 0 1 0 0-64m0-192c-18.2 0-32.7 15.5-31.4 33.7l7.4 104c.9 12.5 11.4 22.3 23.9 22.3 12.6 0 23-9.7 23.9-22.3l7.4-104c1.3-18.2-13.1-33.7-31.4-33.7z'/%3E%3C/svg%3E")}.fa-trophy{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M144.3 0h224c26.5 0 48.1 21.8 47.1 48.2-.2 5.3-.4 10.6-.7 15.8h49.6c26.1 0 49.1 21.6 47.1 49.8-7.5 103.7-60.5 160.7-118 190.5-15.8 8.2-31.9 14.3-47.2 18.8-20.2 28.6-41.2 43.7-57.9 51.8V448h64c17.7 0 32 14.3 32 32s-14.3 32-32 32h-192c-17.7 0-32-14.3-32-32s14.3-32 32-32h64v-73.1c-16-7.7-35.9-22-55.3-48.3-18.4-4.8-38.4-12.1-57.9-23.1C57 273.2 8.2 216.1 1.2 113.6c-1.9-28.1 21-49.7 47.1-49.7h49.6c-.3-5.2-.5-10.4-.7-15.8-1-26.5 20.6-48.2 47.1-48.2zm-42.8 112H49.1c6.2 84.7 45.1 127.1 85.2 149.6-14.4-37.3-26.3-86-32.8-149.6M380 256.8c40.5-23.8 77.1-66.1 83.3-144.8H411c-6.2 60.9-17.4 108.2-31 144.8'/%3E%3C/svg%3E")}.fa-upload{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M256 109.3V320c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-41.4 41.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l96-96c12.5-12.5 32.8-12.5 45.3 0l96 96c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0zM224 400c44.2 0 80-35.8 80-80h80c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64v-32c0-35.3 28.7-64 64-64h80c0 44.2 35.8 80 80 80m144 24a24 24 0 1 0 0-48 24 24 0 1 0 0 48'/%3E%3C/svg%3E")}.fa-video{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='M96 64c-35.3 0-64 28.7-64 64v256c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V128c0-35.3-28.7-64-64-64zm368 272 73.5 58.8c4.2 3.4 9.4 5.2 14.8 5.2 13.1 0 23.7-10.6 23.7-23.7V135.7c0-13.1-10.6-23.7-23.7-23.7-5.4 0-10.6 1.8-14.8 5.2L464 176z'/%3E%3C/svg%3E")}.fa-wine-bottle{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath d='M80-32c0-17.7 14.3-32 32-32h96c17.7 0 32 14.3 32 32 0 11.8-6.4 22.2-16 27.7v145.6c56.5 24.7 96 81.1 96 146.7v224c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V288c0-65.6 39.5-122 96-146.7V-4.3C86.4-9.8 80-20.2 80-32m16 320c-17.7 0-32 14.3-32 32v128c0 17.7 14.3 32 32 32h128c17.7 0 32-14.3 32-32V320c0-17.7-14.3-32-32-32z'/%3E%3C/svg%3E")}.fa-right-from-bracket{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M505 273c9.4-9.4 9.4-24.6 0-33.9L361 95c-6.9-6.9-17.2-8.9-26.2-5.2S320 102.3 320 112v80H208c-26.5 0-48 21.5-48 48v32c0 26.5 21.5 48 48 48h112v80c0 9.7 5.8 18.5 14.8 22.2s19.3 1.7 26.2-5.2zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96C43 32 0 75 0 128v256c0 53 43 96 96 96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H96c-17.7 0-32-14.3-32-32V128c0-17.7 14.3-32 32-32z'/%3E%3C/svg%3E")}.fa-user{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240m-29.7 56C95.8 304 16 383.8 16 482.3c0 16.4 13.3 29.7 29.7 29.7h356.6c16.4 0 29.7-13.3 29.7-29.7 0-98.5-79.8-178.3-178.3-178.3z'/%3E%3C/svg%3E")}.fa-lock{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath d='M128 96v64h128V96c0-35.3-28.7-64-64-64s-64 28.7-64 64m-64 64V96c0-70.7 57.3-128 128-128S320 25.3 320 96v64c35.3 0 64 28.7 64 64v224c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V224c0-35.3 28.7-64 64-64'/%3E%3C/svg%3E")}.fa-envelope{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z'/%3E%3C/svg%3E")}.fa-eye{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='M288 32c-80.8 0-145.5 36.8-192.6 80.6-46.8 43.5-78.1 95.4-93 131.1-3.3 7.9-3.3 16.7 0 24.6 14.9 35.7 46.2 87.7 93 131.1C142.5 443.1 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1 3.3-7.9 3.3-16.7 0-24.6-14.9-35.7-46.2-87.7-93-131.1C433.5 68.9 368.8 32 288 32M144 256a144 144 0 1 1 288 0 144 144 0 1 1-288 0m144-64c0 35.3-28.7 64-64 64-11.5 0-22.3-3-31.7-8.4-1 10.9-.1 22.1 2.9 33.2 13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-12.2-45.7-55.5-74.8-101.1-70.8 5.3 9.3 8.4 20.1 8.4 31.7'/%3E%3C/svg%3E")}.fa-eye-slash{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath d='M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-96.4-96.4c2.7-2.4 5.4-4.8 8-7.2 46.8-43.5 78.1-95.4 93-131.1 3.3-7.9 3.3-16.7 0-24.6-14.9-35.7-46.2-87.7-93-131.1-47.1-43.7-111.8-80.6-192.6-80.6-56.8 0-105.6 18.2-146 44.2zm163.5 163.6C228 121.9 256.9 112 288 112c79.5 0 144 64.5 144 144 0 31.1-9.9 59.9-26.7 83.5l-34.7-34.7c12.7-21.4 17-47.7 10.1-73.7-13.7-51.2-66.4-81.6-117.6-67.9-8.6 2.3-16.7 5.7-24 10l-34.7-34.7zm120.8 256.4c-11.9 3.2-24.4 4.9-37.3 4.9-79.5 0-144-64.5-144-144 0-12.9 1.7-25.4 4.9-37.3l-79.5-79.5C36.8 176 14.4 215 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6 14.9 35.7 46.2 87.7 93 131.1 47.1 43.7 111.8 80.6 192.6 80.6 37.3 0 71.2-7.9 101.5-20.6l-64.2-64.2z'/%3E%3C/svg%3E")}.fa-arrow-right{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h370.7L297.3 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z'/%3E%3C/svg%3E")}.fa-chevron-down{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath d='M201.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 338.7 54.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z'/%3E%3C/svg%3E")}.fa-info-circle{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512m-32-352a32 32 0 1 1 64 0 32 32 0 1 1-64 0m-8 64h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24h-80c-13.3 0-24-10.7-24-24s10.7-24 24-24h24v-64h-24c-13.3 0-24-10.7-24-24s10.7-24 24-24'/%3E%3C/svg%3E")}.fa-wine-can{--fa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath d='M80-32c0-17.7 14.3-32 32-32h96c17.7 0 32 14.3 32 32 0 11.8-6.4 22.2-16 27.7v145.6c56.5 24.7 96 81.1 96 146.7v224c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V288c0-65.6 39.5-122 96-146.7V-4.3C86.4-9.8 80-20.2 80-32m16 320c-17.7 0-32 14.3-32 32v128c0 17.7 14.3 32 32 32h128c17.7 0 32-14.3 32-32V320c0-17.7-14.3-32-32-32z'/%3E%3C/svg%3E")}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(5rem + env(safe-area-inset-top,0px))}
+header.sticky{top:env(safe-area-inset-top,0px)}
+:focus-visible{outline:2px solid #43a047;outline-offset:2px}
+.field{width:100%;border:1px solid #cfe3d3;background:#fff;border-radius:.875rem;padding:.8rem 1rem;font-size:.875rem;font-weight:500;transition:border-color .15s,box-shadow .15s}
+.field:focus{outline:none;border-color:#43a047;box-shadow:0 0 0 4px rgba(76,175,80,.18)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="selection:bg-eco-200">
+<!-- ================= WELCOME PAGE ================= -->
+<div id="view-landing" class="hidden">
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-eco-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="#top" class="flex items-center gap-3" aria-label="EcoSnap home"><span class="w-10 h-10 rounded-2xl bg-gradient-to-br from-eco-600 to-teal-600 flex items-center justify-center text-white shadow-md"><i class="fa-solid fa-leaf text-xl"></i></span><span class="text-xl font-extrabold tracking-tight text-eco-800">EcoSnap</span></a>
+      <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600" aria-label="Sections">
+        <a href="#how" class="hover:text-eco-700">How it works</a><a href="#bins" class="hover:text-eco-700">Sorting guide</a><a href="#levels" class="hover:text-eco-700">Levels</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <button onclick="Auth.go('auth','login')" class="px-4 py-2 text-sm font-bold text-eco-800 rounded-xl hover:bg-eco-50">Sign in</button>
+        <button onclick="Auth.go('auth','signup')" class="px-4 py-2.5 text-sm font-bold text-white rounded-xl bg-gradient-to-r from-eco-600 to-teal-600 hover:from-eco-700 hover:to-teal-700 shadow-md shadow-eco-200">Get started</button>
+      </div>
+    </div>
+  </header>
+
+  <section id="top" class="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12">
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-eco-900 via-eco-800 to-teal-900 text-white p-8 sm:p-14 shadow-2xl">
+      <div class="absolute -right-24 -bottom-24 w-96 h-96 bg-eco-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="grid lg:grid-cols-12 gap-10 items-center relative">
+        <div class="lg:col-span-6 space-y-6">
+          <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.1]">Point your camera at waste. Learn which bin it belongs in.</h1>
+          <p class="text-eco-100/90 text-base leading-relaxed max-w-lg">EcoSnap identifies the item, checks its condition, and tells you exactly where it goes. Every correct sort earns SnapPoints and moves you up your campus leaderboard.</p>
+          <div class="flex flex-wrap gap-3 pt-1">
+            <button onclick="Auth.go('auth','signup')" class="px-6 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-sm shadow-lg flex items-center gap-2">Create free account <i class="fa-solid fa-arrow-right"></i></button>
+            <button onclick="Auth.go('auth','login')" class="px-6 py-3.5 rounded-2xl border border-white/30 hover:bg-white/10 font-bold text-sm">I already have an account</button>
+          </div>
+          <p class="text-xs text-eco-200">Runs in your browser. No download needed.</p>
+        </div>
+        <div class="lg:col-span-6" aria-hidden="true">
+          <div class="max-w-md mx-auto rounded-3xl bg-slate-900 p-4 shadow-2xl ring-1 ring-white/10">
+            <div class="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-800 to-eco-900 flex items-center justify-center">
+              <i class="fa-solid fa-bottle-water text-eco-200/80" style="font-size:96px"></i>
+              <div class="absolute inset-5 border-2 border-emerald-300/70 rounded-xl"></div>
+              <span class="absolute left-5 top-5 -translate-y-1/2 bg-emerald-400 text-slate-950 text-[11px] font-extrabold px-2 py-0.5 rounded">PET Plastic Bottle 98.4%</span>
+              <div class="scan-overlay-line absolute left-5 right-5 h-0.5 bg-emerald-300 shadow-[0_0_12px_#6ee7b7]"></div>
+            </div>
+            <div class="mt-3 rounded-2xl bg-white p-4 flex items-center gap-3 text-slate-800">
+              <span class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center"><i class="fa-solid fa-dumpster"></i></span>
+              <div class="flex-1 min-w-0"><p class="font-extrabold text-sm">Blue Bin: Dry Recyclables</p><p class="text-xs text-slate-500">Rinse it first for 5 bonus points</p></div>
+              <span class="font-extrabold text-eco-700 text-sm">+15</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+    <h2 class="text-3xl font-extrabold tracking-tight text-slate-900 max-w-xl">Three steps from item to points</h2>
+    <ol class="mt-8 grid md:grid-cols-3 gap-5">
+      <li class="glass-card rounded-3xl p-6"><span class="w-10 h-10 rounded-xl bg-eco-100 text-eco-700 flex items-center justify-center font-extrabold">1</span><h3 class="mt-4 font-extrabold text-lg">Snap</h3><p class="mt-1 text-sm text-slate-600 leading-relaxed">Use your camera or upload a photo. EcoSnap names the item and flags problems like grease or leftover liquid.</p></li>
+      <li class="glass-card rounded-3xl p-6"><span class="w-10 h-10 rounded-xl bg-eco-100 text-eco-700 flex items-center justify-center font-extrabold">2</span><h3 class="mt-4 font-extrabold text-lg">Sort</h3><p class="mt-1 text-sm text-slate-600 leading-relaxed">Pick the bin you would use. You get instant feedback and the reason behind the right answer.</p></li>
+      <li class="glass-card rounded-3xl p-6"><span class="w-10 h-10 rounded-xl bg-eco-100 text-eco-700 flex items-center justify-center font-extrabold">3</span><h3 class="mt-4 font-extrabold text-lg">Earn</h3><p class="mt-1 text-sm text-slate-600 leading-relaxed">Collect SnapPoints, keep your daily streak, and see the CO₂ you have kept out of landfill.</p></li>
+    </ol>
+  </section>
+
+  <section id="bins" class="max-w-7xl mx-auto px-4 pb-16 sm:px-6">
+    <h2 class="text-3xl font-extrabold tracking-tight text-slate-900">Know your bins</h2>
+    <div class="mt-8 grid md:grid-cols-3 gap-5">
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 border-t-8 border-t-blue-600"><h3 class="font-extrabold text-lg">Blue Bin</h3><p class="text-sm font-semibold text-blue-700">Dry recyclables</p><p class="mt-2 text-sm text-slate-600">Clean plastic bottles, aluminum cans, paper and cardboard.</p></div>
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 border-t-8 border-t-eco-600"><h3 class="font-extrabold text-lg">Green Bin</h3><p class="text-sm font-semibold text-eco-700">Organic and compost</p><p class="mt-2 text-sm text-slate-600">Food scraps, apple cores and greasy pizza boxes.</p></div>
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 border-t-8 border-t-amber-400"><h3 class="font-extrabold text-lg">Yellow Bin</h3><p class="text-sm font-semibold text-amber-700">Hazardous and e-waste</p><p class="mt-2 text-sm text-slate-600">Batteries, circuit boards and anything with toxic metals.</p></div>
+    </div>
+  </section>
+
+  <section id="levels" class="max-w-7xl mx-auto px-4 pb-16 sm:px-6">
+    <h2 class="text-3xl font-extrabold tracking-tight text-slate-900">Level up as you sort</h2>
+    <ul class="mt-8 grid sm:grid-cols-2 lg:grid-cols-5 gap-3 text-sm">
+      <li class="rounded-2xl bg-white border border-eco-100 p-4"><p class="font-extrabold">Eco Novice 🌱</p><p class="text-slate-500 text-xs mt-1">Start here</p></li>
+      <li class="rounded-2xl bg-white border border-eco-100 p-4"><p class="font-extrabold">Waste Wrangler 🧹</p><p class="text-slate-500 text-xs mt-1">500 points</p></li>
+      <li class="rounded-2xl bg-white border border-eco-100 p-4"><p class="font-extrabold">Eco Explorer 🌱</p><p class="text-slate-500 text-xs mt-1">1,200 points</p></li>
+      <li class="rounded-2xl bg-white border border-eco-100 p-4"><p class="font-extrabold">Green Guardian 🌿</p><p class="text-slate-500 text-xs mt-1">2,000 points</p></li>
+      <li class="rounded-2xl bg-eco-900 text-white p-4"><p class="font-extrabold">Planet Champion 🌎</p><p class="text-eco-200 text-xs mt-1">3,500 points</p></li>
+    </ul>
+    <div class="mt-12 rounded-3xl bg-eco-50 border border-eco-200 p-8 flex flex-col sm:flex-row items-center justify-between gap-5">
+      <p class="text-xl font-extrabold text-eco-900">Ready to start your streak?</p>
+      <button onclick="Auth.go('auth','signup')" class="px-6 py-3.5 rounded-2xl bg-eco-700 hover:bg-eco-800 text-white font-extrabold text-sm">Create free account</button>
+    </div>
+  </section>
+  <footer class="bg-slate-900 text-slate-400 text-xs py-6 text-center">EcoSnap • Campus Circular Economy Initiative</footer>
+</div>
+
+<!-- ================= SIGN IN / CREATE ACCOUNT ================= -->
+<div id="view-auth" class="hidden min-h-screen grid lg:grid-cols-2">
+  <aside class="hidden lg:flex flex-col justify-between bg-gradient-to-br from-eco-900 via-eco-800 to-teal-900 text-white p-12">
+    <a href="#top" onclick="Auth.go('landing');return false" class="flex items-center gap-3 w-fit"><span class="w-10 h-10 rounded-2xl bg-gradient-to-br from-eco-600 to-teal-600 flex items-center justify-center text-white shadow-md"><i class="fa-solid fa-leaf text-xl"></i></span><span class="text-xl font-extrabold tracking-tight text-white">EcoSnap</span></a>
+    <div class="space-y-6 max-w-md">
+      <h2 class="text-4xl font-extrabold tracking-tight leading-tight">Your points, level and streak are saved to your account.</h2>
+      <ul class="space-y-3 text-eco-100 text-sm">
+        <li class="flex gap-3"><i class="fa-solid fa-circle-check text-emerald-300 mt-0.5"></i>Pick up your progress every time you sign in</li>
+        <li class="flex gap-3"><i class="fa-solid fa-circle-check text-emerald-300 mt-0.5"></i>Appear on the campus leaderboard under your name</li>
+        <li class="flex gap-3"><i class="fa-solid fa-circle-check text-emerald-300 mt-0.5"></i>Track the CO₂ you have saved over time</li>
+      </ul>
+    </div>
+    <p class="text-xs text-eco-200">Campus Circular Economy Initiative</p>
+  </aside>
+  <main class="flex items-center justify-center p-6 sm:p-10 bg-[#f4fbf7]">
+    <div class="w-full max-w-md">
+      <a href="#top" onclick="Auth.go('landing');return false" class="lg:hidden flex items-center gap-3 mb-8 w-fit"><span class="w-10 h-10 rounded-2xl bg-gradient-to-br from-eco-600 to-teal-600 flex items-center justify-center text-white shadow-md"><i class="fa-solid fa-leaf text-xl"></i></span><span class="text-xl font-extrabold tracking-tight text-eco-800">EcoSnap</span></a>
+      <div class="flex p-1 rounded-2xl bg-eco-100/70 mb-6" role="tablist">
+        <button id="tab-login" role="tab" onclick="Auth.setMode('login')" class="flex-1 py-2.5 rounded-xl text-sm font-bold">Sign in</button>
+        <button id="tab-signup" role="tab" onclick="Auth.setMode('signup')" class="flex-1 py-2.5 rounded-xl text-sm font-bold">Create account</button>
+      </div>
+      <h1 id="auth-title" class="text-2xl font-extrabold text-slate-900"></h1>
+      <p id="auth-sub" class="text-sm text-slate-500 mt-1 mb-6"></p>
+      <div id="auth-error" role="alert" class="hidden mb-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm font-semibold px-4 py-3"></div>
+      <form id="auth-form" onsubmit="Auth.submit(event)" novalidate class="space-y-4">
+        <div id="auth-name-wrap" class="hidden"><label for="auth-name" class="block text-sm font-bold text-slate-700 mb-1.5">Full name</label><input id="auth-name" class="field" autocomplete="name" maxlength="40" placeholder="Alex Morgan"></div>
+        <div><label for="auth-email" class="block text-sm font-bold text-slate-700 mb-1.5">Email</label><input id="auth-email" type="email" class="field" autocomplete="email" placeholder="you@college.edu"></div>
+        <div>
+          <label for="auth-pw" class="block text-sm font-bold text-slate-700 mb-1.5">Password</label>
+          <div class="relative"><input id="auth-pw" type="password" oninput="Auth.hint()" class="field pr-12" placeholder="Enter your password"><button type="button" onclick="Auth.pwToggle()" id="pw-toggle" aria-label="Show password" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg text-slate-500 hover:bg-eco-50"><i id="pw-eye" class="fa-solid fa-eye"></i></button></div>
+          <p id="pw-hint" class="hidden text-xs mt-1.5 text-slate-500"></p>
+        </div>
+        <label id="auth-remember-wrap" class="flex items-center gap-2 text-sm text-slate-600 font-medium"><input id="auth-remember" type="checkbox" checked class="w-4 h-4 accent-green-700"> Keep me signed in for 7 days</label>
+        <button id="auth-submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-eco-600 to-teal-600 hover:from-eco-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-md disabled:opacity-70 flex items-center justify-center gap-2"><i id="auth-spin" class="hidden fa-solid fa-circle-notch"></i><span id="auth-submit-label"></span></button>
+      </form>
+      <div class="my-6 flex items-center gap-3 text-xs text-slate-400"><span class="flex-1 h-px bg-slate-200"></span>or<span class="flex-1 h-px bg-slate-200"></span></div>
+      <button onclick="Auth.demo()" class="w-full py-3 rounded-2xl border border-eco-200 bg-white hover:bg-eco-50 text-eco-800 font-bold text-sm">Explore with a demo player</button>
+      <button onclick="Auth.go('landing')" class="mt-6 mx-auto block text-xs font-semibold text-slate-500 hover:text-eco-700">Back to welcome page</button>
+    </div>
+  </main>
+</div>
+
+
+    <div id="app-shell" class="hidden min-h-screen flex flex-col justify-between">
+<!-- TOP STICKY GAMIFICATION HUD & NAVBAR -->
+    <header class="sticky top-0 z-50 glass-card bg-white/95 border-b border-eco-100 shadow-sm">
+        
+        <!-- Gamification Banner Line -->
+        <div class="bg-gradient-to-r from-eco-800 via-eco-700 to-teal-800 text-white text-xs py-2 px-4 shadow-inner">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+                
+                <!-- Level & Title -->
+                <div class="flex items-center gap-2 font-semibold">
+                    <span id="hud-level-badge" class="bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-bold text-[11px] shadow-sm flex items-center gap-1">
+                        <i class="fa-solid fa-star"></i> Lvl 8
+                    </span>
+                    <span id="hud-level-title" class="text-eco-100 font-bold tracking-wide">Green Guardian 🌿</span>
+                </div>
+
+                <!-- SnapPoints Core Display -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+                        <i class="fa-solid fa-recycle text-emerald-300 text-sm animate-spin-slow"></i>
+                        <span id="hud-snappoints" class="font-extrabold text-white text-sm tracking-tight">2,450</span>
+                        <span class="text-emerald-200 text-[11px] font-bold">SnapPoints ♻️</span>
+                    </div>
+
+                    <!-- Streak Counter -->
+                    <div class="hidden sm:flex items-center gap-1 text-amber-300 font-bold bg-amber-950/40 px-2.5 py-1 rounded-full border border-amber-400/30">
+                        <span>🔥</span>
+                        <span id="hud-streak">5-Day Streak</span>
+                        <span class="text-[10px] text-amber-200/80 font-normal">(+25 bonus active)</span>
+                    </div>
+                </div>
+
+                <!-- Next Level Progress Bar -->
+                <div class="hidden md:flex items-center gap-2 w-48">
+                    <span class="text-[10px] text-eco-200">Next Lvl</span>
+                    <div class="w-full bg-eco-950/60 h-2 rounded-full overflow-hidden border border-eco-500/30">
+                        <div id="hud-level-progress" class="bg-gradient-to-r from-emerald-400 to-teal-300 h-full transition-all duration-500" style="width: 65%;"></div>
+                    </div>
+                    <span id="hud-progress-text" class="text-[10px] font-mono text-eco-100">65%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Navigation Bar -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Logo & Name -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('home')">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-eco-600 to-teal-600 flex items-center justify-center text-white shadow-md shadow-eco-200">
+                        <i class="fa-solid fa-leaf text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-eco-800 to-teal-700 bg-clip-text text-transparent">EcoSnap</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 font-medium hidden sm:block">AI Smart Recycling &amp; Waste Classifier</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex items-center space-x-1">
+                    <button id="nav-home" onclick="switchTab('home')" class="nav-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all text-eco-800 bg-eco-50 shadow-sm">
+                        <i class="fa-solid fa-house mr-1.5"></i>Home
+                    </button>
+                    <button id="nav-scan" onclick="switchTab('scan')" class="nav-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all text-slate-600 hover:text-eco-700 hover:bg-eco-50/60">
+                        <i class="fa-solid fa-camera mr-1.5 text-eco-600"></i>Scan Game
+                    </button>
+                    <button id="nav-leaderboard" onclick="switchTab('leaderboard')" class="nav-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all text-slate-600 hover:text-eco-700 hover:bg-eco-50/60">
+                        <i class="fa-solid fa-trophy mr-1.5 text-amber-500"></i>Leaderboard
+                    </button>
+                    <button id="nav-impact" onclick="switchTab('impact')" class="nav-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all text-slate-600 hover:text-eco-700 hover:bg-eco-50/60">
+                        <i class="fa-solid fa-chart-pie mr-1.5 text-teal-600"></i>Impact
+                    </button>
+                    <button id="nav-about" onclick="switchTab('about')" class="nav-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all text-slate-600 hover:text-eco-700 hover:bg-eco-50/60">
+                        <i class="fa-solid fa-circle-info mr-1.5"></i>About
+                    </button>
+                </nav>
+
+                <!-- Quick Action Button -->
+                <div class="hidden sm:flex items-center gap-3">
+                    <button onclick="switchTab('scan')" class="bg-gradient-to-r from-eco-600 to-teal-600 hover:from-eco-700 hover:to-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md shadow-eco-200 transition-all flex items-center gap-2 pulse-subtle">
+                        <i class="fa-solid fa-gamepad"></i> Play Scan Game
+                    </button>
+                    <div class="relative">
+                        <button id="user-btn" onclick="Auth.menu()" aria-haspopup="true" aria-expanded="false" class="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-eco-200 bg-white hover:bg-eco-50 transition-colors">
+                            <span class="u-ini w-8 h-8 rounded-full bg-eco-700 text-white text-xs font-extrabold flex items-center justify-center"></span>
+                            <span class="u-first text-xs font-bold text-slate-700 max-w-[7rem] truncate"></span>
+                            <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
+                        </button>
+                        <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-eco-100 p-2 z-50">
+                            <div class="px-3 py-2.5 border-b border-slate-100">
+                                <p class="u-name text-sm font-extrabold text-slate-800 truncate"></p>
+                                <p class="u-email text-xs text-slate-500 truncate"></p>
+                            </div>
+                            <button onclick="Auth.logout()" class="mt-1 w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-red-700 flex items-center gap-2">
+                                <i class="fa-solid fa-right-from-bracket w-4"></i>Sign out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button onclick="toggleMobileMenu()" class="p-2 rounded-xl text-slate-700 hover:bg-eco-50">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-eco-100 bg-white/95 px-4 pt-2 pb-4 space-y-1 shadow-lg">
+            <button onclick="switchTab('home'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-xl font-semibold text-slate-700 hover:bg-eco-50 flex items-center gap-2">
+                <i class="fa-solid fa-house w-5 text-eco-600"></i>Home
+            </button>
+            <button onclick="switchTab('scan'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-xl font-semibold text-slate-700 hover:bg-eco-50 flex items-center gap-2">
+                <i class="fa-solid fa-camera w-5 text-eco-600"></i>Scan &amp; Classify Game
+            </button>
+            <button onclick="switchTab('leaderboard'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-xl font-semibold text-slate-700 hover:bg-eco-50 flex items-center gap-2">
+                <i class="fa-solid fa-trophy w-5 text-amber-500"></i>Leaderboard
+            </button>
+            <button onclick="switchTab('impact'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-xl font-semibold text-slate-700 hover:bg-eco-50 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie w-5 text-teal-600"></i>Impact Dashboard
+            </button>
+            <button onclick="switchTab('about'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-xl font-semibold text-slate-700 hover:bg-eco-50 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info w-5"></i>About EcoSnap
+            </button>
+            <div class="mt-2 pt-2 border-t border-eco-100 flex items-center justify-between gap-3 px-3">
+                <div class="min-w-0"><p class="u-name text-sm font-extrabold text-slate-800 truncate"></p><p class="u-email text-xs text-slate-500 truncate"></p></div>
+                <button onclick="Auth.logout()" class="shrink-0 px-3 py-2 rounded-xl text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 flex items-center gap-1.5"><i class="fa-solid fa-right-from-bracket"></i>Sign out</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow relative">
+
+        <!-- Floating Points Effect Canvas Overlay -->
+        <div id="floating-points-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+        <!-- ================= HOME TAB ================= -->
+        <section id="tab-home" class="tab-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+            
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-eco-900 via-eco-800 to-teal-900 text-white p-8 sm:p-12 shadow-2xl">
+                <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-eco-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-20 -top-20 w-80 h-80 bg-teal-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="grid md:grid-cols-12 gap-8 items-center relative z-10">
+                    <div class="md:col-span-7 space-y-6">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-eco-500/20 border border-eco-400/30 text-eco-200 text-xs font-semibold backdrop-blur-md">
+                            <span>♻️</span> PWA Zero Download • Earn SnapPoints with Every Item
+                        </div>
+                        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+                            Snap Waste, Sort Right, <br>
+                            <span class="bg-gradient-to-r from-eco-200 via-emerald-300 to-teal-200 bg-clip-text text-transparent">Earn SnapPoints!</span>
+                        </h1>
+                        <p class="text-eco-100/90 text-sm sm:text-base max-w-xl font-normal leading-relaxed">
+                            Turn recycling into a rewarding game! Use our browser AI camera to instantly classify waste, pick the correct bin, earn **SnapPoints**, and unlock levels like **Green Guardian 🌿**.
+                        </p>
+                        
+                        <div class="flex flex-wrap gap-4 pt-2">
+                            <button onclick="switchTab('scan')" class="bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-extrabold px-7 py-4 rounded-2xl shadow-lg shadow-eco-950/40 transition-all flex items-center gap-2.5 text-sm transform hover:-translate-y-0.5">
+                                <i class="fa-solid fa-qrcode text-lg"></i> Start Scanning &amp; Win
+                            </button>
+                            <button onclick="switchTab('leaderboard')" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-6 py-4 rounded-2xl transition-all text-sm backdrop-blur-md flex items-center gap-2">
+                                <i class="fa-solid fa-trophy text-amber-300"></i> View Leaderboard
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats HUD Box -->
+                    <div class="md:col-span-5">
+                        <div class="glass-card bg-white/10 p-6 rounded-3xl border border-white/20 text-white shadow-2xl space-y-4">
+                            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                                <span class="text-xs font-bold uppercase tracking-wider text-eco-300">Your Eco Player HUD</span>
+                                <span class="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold px-2 py-0.5 rounded-full">Active Season</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-eco-950/50 p-3.5 rounded-2xl border border-eco-500/20">
+                                    <span class="text-[10px] text-eco-200 block">Total SnapPoints</span>
+                                    <span id="home-stat-points" class="text-xl font-black text-amber-300">2,450</span>
+                                </div>
+                                <div class="bg-eco-950/50 p-3.5 rounded-2xl border border-eco-500/20">
+                                    <span class="text-[10px] text-eco-200 block">Current Rank</span>
+                                    <span id="home-stat-rank" class="text-xl font-black text-emerald-300">#3 Campus</span>
+                                </div>
+                                <div class="bg-eco-950/50 p-3.5 rounded-2xl border border-eco-500/20">
+                                    <span class="text-[10px] text-eco-200 block">Items Recycled</span>
+                                    <span id="home-stat-items" class="text-xl font-black text-teal-300">14 Items</span>
+                                </div>
+                                <div class="bg-eco-950/50 p-3.5 rounded-2xl border border-eco-500/20">
+                                    <span class="text-[10px] text-eco-200 block">CO₂ Saved</span>
+                                    <span id="home-stat-co2" class="text-xl font-black text-eco-300">2.82 kg</span>
+                                </div>
+                            </div>
+
+                            <!-- Reward Rule Summary -->
+                            <div class="p-3 bg-white/5 rounded-xl border border-white/10 text-[11px] space-y-1 text-eco-100">
+                                <div class="flex justify-between">
+                                    <span>🎯 Correct Bin Placement</span>
+                                    <span class="font-bold text-amber-300">+10 SnapPoints</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>🔥 Daily Login Streak</span>
+                                    <span class="font-bold text-amber-300">+25 SnapPoints</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>⭐ 10-Item Bonus Streak</span>
+                                    <span class="font-bold text-amber-300">+50 SnapPoints</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works 3-Step Section -->
+            <div class="space-y-6">
+                <div class="text-center max-w-xl mx-auto">
+                    <span class="text-xs font-bold uppercase tracking-wider text-eco-700 bg-eco-100 px-3 py-1 rounded-full">Simple &amp; Rewarding</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-2">How EcoSnap Works</h2>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="p-6 rounded-3xl bg-white border border-eco-100 shadow-sm hover:shadow-md transition-all space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-eco-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-eco-200">
+                            1
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800">Snap or Upload</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Point your phone camera at any trash item or pick from our sample list. Zero app download required!
+                        </p>
+                    </div>
+
+                    <div class="p-6 rounded-3xl bg-white border border-eco-100 shadow-sm hover:shadow-md transition-all space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-teal-200">
+                            2
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800">YOLOv11 AI Detection</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Edge AI identifies the material type, resin code, and checks if the item needs rinsing before disposal.
+                        </p>
+                    </div>
+
+                    <div class="p-6 rounded-3xl bg-white border border-eco-100 shadow-sm hover:shadow-md transition-all space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xl shadow-md shadow-amber-200">
+                            3
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800">Place Bin &amp; Earn Points</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Select the matching bin! Gain **+10 SnapPoints**, level up, and help your dorm top the campus leaderboard.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Waste Sorting Challenge Quick Play Widget -->
+            <div class="bg-gradient-to-r from-eco-50 via-teal-50 to-emerald-50 p-6 sm:p-8 rounded-3xl border border-eco-200 shadow-sm">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="space-y-2 text-center md:text-left">
+                        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-300">
+                            ⚡ Quick Quiz Challenge
+                        </span>
+                        <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">Test Your Waste Knowledge!</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 max-w-lg">
+                            Where should an <strong>Unwashed Greasy Pizza Box</strong> go?
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full md:w-auto">
+                        <button onclick="handleHomeQuizAnswer('blue')" class="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow">
+                            🟦 Blue Bin (Recyclable)
+                        </button>
+                        <button onclick="handleHomeQuizAnswer('green')" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow">
+                            🟩 Green Bin (Compost)
+                        </button>
+                        <button onclick="handleHomeQuizAnswer('yellow')" class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-all shadow">
+                            🟨 Yellow Bin (E-Waste)
+                        </button>
+                        <button onclick="handleHomeQuizAnswer('black')" class="px-4 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition-all shadow">
+                            ⬛ Black Bin (Landfill)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SCAN GAME TAB ================= -->
+        <section id="tab-scan" class="tab-content hidden max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            
+            <div class="text-center max-w-xl mx-auto space-y-1">
+                <span class="text-xs font-bold uppercase tracking-wider text-eco-700 bg-eco-100 px-3 py-1 rounded-full">Interactive AI Classifier</span>
+                <h2 class="text-3xl font-extrabold text-slate-800">Scan &amp; Sort Game</h2>
+                <p class="text-slate-500 text-xs sm:text-sm">Identify items, inspect condition, and drop them in the correct bin to earn **+10 SnapPoints**!</p>
+            </div>
+
+            <!-- Viewfinder Mode Switcher -->
+            <div class="flex justify-center">
+                <div class="inline-flex p-1 bg-slate-200/80 rounded-2xl space-x-1 shadow-inner">
+                    <button id="mode-preset-btn" onclick="setScanMode('preset')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all bg-white text-eco-800 shadow-sm">
+                        <i class="fa-solid fa-list-check mr-1.5"></i> Select Item
+                    </button>
+                    <button id="mode-cam-btn" onclick="setScanMode('cam')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-video mr-1.5"></i> Live Camera
+                    </button>
+                    <button id="mode-file-btn" onclick="setScanMode('file')" class="px-5 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-upload mr-1.5"></i> Upload Photo
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left: Viewfinder / Preset List Column -->
+                <div class="lg:col-span-6 space-y-4">
+                    
+                    <!-- Viewfinder Frame -->
+                    <div id="scan-viewfinder-box" class="bg-white p-4 rounded-3xl border border-eco-200 shadow-xl space-y-4">
+                        
+                        <!-- Camera / Preset Viewport -->
+                        <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border-2 border-eco-500/40">
+                            
+                            <video id="webcam-stream" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
+                            <img id="scanner-active-img" src="https://images.unsplash.com/photo-1528323273322-d81458248d40?auto=format&fit=crop&w=700&q=80" class="w-full h-full object-cover" alt="Active Item">
+
+                            <!-- Bounding Box & HUD -->
+                            <div class="absolute inset-4 border-2 border-dashed border-eco-400/70 rounded-xl pointer-events-none flex flex-col justify-between p-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="bg-eco-800/90 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 backdrop-blur-md">
+                                        <i class="fa-solid fa-circle text-[6px] text-emerald-400 animate-ping"></i> YOLOv11 Edge Active
+                                    </span>
+                                    <span id="scan-fps" class="bg-slate-900/80 text-eco-300 text-[10px] font-mono px-2 py-0.5 rounded">30 FPS</span>
+                                </div>
+
+                                <!-- Dynamic Bounding Box -->
+                                <div id="ai-bbox" class="absolute border-2 border-emerald-400 bg-emerald-500/10 rounded-lg inset-8 transition-all duration-300 pointer-events-none">
+                                    <span id="ai-bbox-text" class="absolute -top-6 left-0 bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                                        PET Plastic Bottle (98.4%)
+                                    </span>
+                                </div>
+
+                                <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent relative scan-overlay-line"></div>
+
+                                <div class="text-center text-[11px] text-eco-100 bg-slate-900/70 py-1 rounded backdrop-blur-sm">
+                                    Center item for AI classification
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Zone (Hidden by default) -->
+                        <div id="scanner-file-zone" class="hidden border-2 border-dashed border-eco-300 bg-eco-50/50 rounded-2xl p-6 text-center cursor-pointer hover:bg-eco-100/50 transition-all" onclick="document.getElementById('file-upload-input').click()">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-eco-600 mb-2"></i>
+                            <p class="font-bold text-xs text-slate-700">Click or drag &amp; drop an image here</p>
+                            <input type="file" id="file-upload-input" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+                        </div>
+
+                        <!-- Preset Select Buttons Bar -->
+                        <div id="scanner-presets-bar">
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Select Sample Waste Item:</span>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="loadScanPreset('bottle')" class="preset-btn p-2 rounded-xl border border-slate-200 hover:border-eco-500 hover:bg-eco-50 text-left transition-all text-xs font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-bottle-water text-blue-600 text-lg"></i>
+                                    <div>
+                                        <div class="text-slate-800 font-bold">Plastic Bottle</div>
+                                        <div class="text-[10px] text-slate-400">PET #1</div>
+                                    </div>
+                                </button>
+                                <button onclick="loadScanPreset('pizzabox')" class="preset-btn p-2 rounded-xl border border-slate-200 hover:border-eco-500 hover:bg-eco-50 text-left transition-all text-xs font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-box text-amber-700 text-lg"></i>
+                                    <div>
+                                        <div class="text-slate-800 font-bold">Pizza Box</div>
+                                        <div class="text-[10px] text-slate-400">Cardboard</div>
+                                    </div>
+                                </button>
+                                <button onclick="loadScanPreset('battery')" class="preset-btn p-2 rounded-xl border border-slate-200 hover:border-eco-500 hover:bg-eco-50 text-left transition-all text-xs font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-car-battery text-amber-500 text-lg"></i>
+                                    <div>
+                                        <div class="text-slate-800 font-bold">AA Battery</div>
+                                        <div class="text-[10px] text-slate-400">Hazardous</div>
+                                    </div>
+                                </button>
+                                <button onclick="loadScanPreset('can')" class="preset-btn p-2 rounded-xl border border-slate-200 hover:border-eco-500 hover:bg-eco-50 text-left transition-all text-xs font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-wine-can text-slate-500 text-lg"></i>
+                                    <div>
+                                        <div class="text-slate-800 font-bold">Soda Can</div>
+                                        <div class="text-[10px] text-slate-400">Aluminum</div>
+                                    </div>
+                                </button>
+                                <button onclick="loadScanPreset('apple')" class="preset-btn p-2 rounded-xl border border-slate-200 hover:border-eco-500 hover:bg-eco-50 text-left transition-all text-xs font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-apple-whole text-emerald-600 text-lg"></i>
+                                    <div>
+                                        <div class="text-slate-800 font-bold">Apple Core</div>
+                                        <div class="text-[10px] text-slate-400">Organic</div>
+                                    </div>
+                                </button>
+                                <button onclick="loadScanPreset('circuit')" class="preset-btn p-2 rounded-xl border border-slate-200 hover:border-eco-500 hover:bg-eco-50 text-left transition-all text-xs font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-microchip text-purple-600 text-lg"></i>
+                                    <div>
+                                        <div class="text-slate-800 font-bold">E-Waste Board</div>
+                                        <div class="text-[10px] text-slate-400">Circuit</div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Right: AI Classification Result & Bin Placement Game Column -->
+                <div class="lg:col-span-6 space-y-4">
+                    
+                    <!-- AI Findings Box -->
+                    <div class="bg-white p-6 rounded-3xl border border-eco-200 shadow-xl space-y-4">
+                        <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                            <div>
+                                <span class="text-[10px] font-extrabold text-eco-700 uppercase tracking-wider">AI Classification Identified</span>
+                                <h3 id="scan-res-name" class="text-2xl font-black text-slate-800">PET Plastic Bottle (#1)</h3>
+                            </div>
+                            <span id="scan-res-confidence" class="bg-eco-100 text-eco-800 text-xs font-extrabold px-3 py-1 rounded-full">
+                                98.4% Confidence
+                            </span>
+                        </div>
+
+                        <!-- Material Condition Warning -->
+                        <div id="scan-res-condition-box" class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-3">
+                            <div>
+                                <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Material Condition:
+                                </div>
+                                <p id="scan-res-condition-text" class="text-[11px] mt-0.5">Dirty / Liquid Residue present inside bottle.</p>
+                            </div>
+                            <button id="rinse-btn" onclick="applyRinseBonus()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-[11px] flex-shrink-0 shadow transition-all">
+                                <i class="fa-solid fa-soap mr-1"></i> Rinse First (+5 Pts)
+                            </button>
+                        </div>
+
+                        <!-- Interactive Bin Selection Game Banner -->
+                        <div class="space-y-3 pt-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    <i class="fa-solid fa-hand-pointer text-eco-600 mr-1"></i> Choose Correct Bin to Score +10 SnapPoints:
+                                </span>
+                            </div>
+
+                            <!-- 4 Color Bins Interactive Grid -->
+                            <div class="grid grid-cols-2 gap-3">
+                                
+                                <!-- Blue Bin -->
+                                <button onclick="submitBinChoice('blue')" class="bin-card p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white text-left shadow-md flex items-center gap-3 border border-blue-400/30">
+                                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl font-bold">
+                                        <i class="fa-solid fa-recycle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-extrabold text-sm">Blue Bin</div>
+                                        <div class="text-[10px] text-blue-100">Dry Recyclables</div>
+                                    </div>
+                                </button>
+
+                                <!-- Green Bin -->
+                                <button onclick="submitBinChoice('green')" class="bin-card p-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-eco-700 text-white text-left shadow-md flex items-center gap-3 border border-emerald-400/30">
+                                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl font-bold">
+                                        <i class="fa-solid fa-seedling"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-extrabold text-sm">Green Bin</div>
+                                        <div class="text-[10px] text-emerald-100">Organic / Compost</div>
+                                    </div>
+                                </button>
+
+                                <!-- Yellow Bin -->
+                                <button onclick="submitBinChoice('yellow')" class="bin-card p-4 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 text-left shadow-md flex items-center gap-3 border border-amber-300/30">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-950/20 flex items-center justify-center text-xl font-bold">
+                                        <i class="fa-solid fa-car-battery"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-extrabold text-sm">Yellow Bin</div>
+                                        <div class="text-[10px] text-amber-950">Hazardous / E-Waste</div>
+                                    </div>
+                                </button>
+
+                                <!-- Black Bin -->
+                                <button onclick="submitBinChoice('black')" class="bin-card p-4 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 text-white text-left shadow-md flex items-center gap-3 border border-slate-700/30">
+                                    <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl font-bold">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-extrabold text-sm">Black Bin</div>
+                                        <div class="text-[10px] text-slate-300">Residual / Landfill</div>
+                                    </div>
+                                </button>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= LEADERBOARD TAB ================= -->
+        <section id="tab-leaderboard" class="tab-content hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            
+            <div class="text-center max-w-xl mx-auto space-y-1">
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+                    🏆 Inter-Dorm &amp; Campus Standings
+                </span>
+                <h2 class="text-3xl font-black text-slate-800">EcoSnap Leaderboard</h2>
+                <p class="text-slate-500 text-xs sm:text-sm">Compete for the highest **SnapPoints** and earn exclusive campus eco-trophies!</p>
+            </div>
+
+            <!-- Leaderboard Card -->
+            <div class="bg-white rounded-3xl border border-eco-200 shadow-xl overflow-hidden space-y-6 p-6 sm:p-8">
+                
+                <!-- Filters -->
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div class="flex gap-2">
+                        <button class="px-3.5 py-1.5 bg-eco-600 text-white font-bold text-xs rounded-xl shadow-sm">
+                            Campus Wide
+                        </button>
+                        <button class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all">
+                            Inter-Dorm
+                        </button>
+                        <button class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all">
+                            Weekly
+                        </button>
+                    </div>
+
+                    <div class="text-xs font-bold text-eco-700 flex items-center gap-1.5 bg-eco-50 px-3 py-1 rounded-full">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Updates in real time as you play
+                    </div>
+                </div>
+
+                <!-- Leaderboard Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs sm:text-sm">
+                        <thead>
+                            <tr class="text-slate-400 uppercase text-[10px] tracking-wider font-extrabold border-b border-slate-100">
+                                <th class="pb-3 px-3">Rank</th>
+                                <th class="pb-3 px-3">Eco Champion</th>
+                                <th class="pb-3 px-3">Level Title</th>
+                                <th class="pb-3 px-3 text-right">SnapPoints ♻️</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-tbody" class="divide-y divide-slate-100">
+                            <!-- Dynamically updated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Incentive Banner -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-eco-500/10 to-teal-500/10 border border-amber-300/40 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🎁</span>
+                        <div>
+                            <span class="font-bold text-slate-800 block">Monthly Top Champion Reward</span>
+                            <span class="text-slate-500">Top rank wins free sustainable campus cafeteria meal vouchers &amp; custom EcoSnap badge.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= IMPACT TAB ================= -->
+        <section id="tab-impact" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-eco-700 bg-eco-100 px-3 py-1 rounded-full">Eco Analytics</span>
+                    <h2 class="text-3xl font-extrabold text-slate-800 mt-2">Personal Impact Dashboard</h2>
+                    <p class="text-slate-500 text-xs sm:text-sm">Track real GHG carbon emissions avoided, landfill space saved &amp; badges unlocked.</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="addRandomImpactLog()" class="px-4 py-2 bg-eco-600 hover:bg-eco-700 text-white rounded-xl text-xs font-bold shadow transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> Simulate Item Sort
+                    </button>
+                    <button onclick="resetImpactData()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-all">
+                        Reset Log
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Metric Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-5 rounded-2xl bg-white border border-eco-100 shadow-sm space-y-1">
+                    <div class="flex justify-between items-center text-eco-600">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">SnapPoints</span>
+                        <i class="fa-solid fa-recycle text-lg"></i>
+                    </div>
+                    <div id="impact-stat-points" class="text-2xl font-black text-slate-800">2,450</div>
+                    <p class="text-[10px] text-eco-700 font-semibold">Active Balance</p>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-white border border-eco-100 shadow-sm space-y-1">
+                    <div class="flex justify-between items-center text-emerald-600">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">CO₂ Saved</span>
+                        <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+                    </div>
+                    <div id="impact-stat-co2" class="text-2xl font-black text-slate-800">2.82 kg</div>
+                    <p class="text-[10px] text-emerald-600 font-semibold">↑ 14% this week</p>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-white border border-eco-100 shadow-sm space-y-1">
+                    <div class="flex justify-between items-center text-teal-600">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Landfill Saved</span>
+                        <i class="fa-solid fa-dumpster text-lg"></i>
+                    </div>
+                    <div id="impact-stat-landfill" class="text-2xl font-black text-slate-800">1.45 kg</div>
+                    <p class="text-[10px] text-slate-400">Diverted from waste</p>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-white border border-eco-100 shadow-sm space-y-1">
+                    <div class="flex justify-between items-center text-amber-600">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Sorting Accuracy</span>
+                        <i class="fa-solid fa-bullseye text-lg"></i>
+                    </div>
+                    <div id="impact-stat-accuracy" class="text-2xl font-black text-slate-800">97.2%</div>
+                    <p class="text-[10px] text-slate-400">Condition verified</p>
+                </div>
+            </div>
+
+            <!-- Charts & Achievements Grid -->
+            <div class="grid lg:grid-cols-12 gap-8">
+                
+                <!-- Chart -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-sm mb-4">Material Waste Breakdown</h3>
+                    <div class="h-64 relative">
+                        <canvas id="impactDoughnutChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Unlocked Badges Showcase -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-800 text-sm">Unlocked Achievements</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3.5 rounded-2xl bg-eco-50 border border-eco-200 flex flex-col items-center text-center">
+                            <span class="text-2xl mb-1">🌱</span>
+                            <span class="text-xs font-bold text-eco-900">First Snap</span>
+                            <span class="text-[10px] text-eco-700">Classified 1st Item</span>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-teal-50 border border-teal-200 flex flex-col items-center text-center">
+                            <span class="text-2xl mb-1">🔥</span>
+                            <span class="text-xs font-bold text-teal-900">Streak Master</span>
+                            <span class="text-[10px] text-teal-700">5-Day Active Streak</span>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col items-center text-center">
+                            <span class="text-2xl mb-1">🌿</span>
+                            <span class="text-xs font-bold text-amber-900">Green Guardian</span>
+                            <span class="text-[10px] text-amber-700">Reached Level 8</span>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-100 border border-slate-200 opacity-60 flex flex-col items-center text-center">
+                            <span class="text-2xl mb-1">🌎</span>
+                            <span class="text-xs font-bold text-slate-600">Planet Champion</span>
+                            <span class="text-[10px] text-slate-400">Unlock at Level 10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Scan Log Table -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100">
+                    <h3 class="font-bold text-slate-800 text-base">Waste Log History</h3>
+                    <p class="text-xs text-slate-400">Every item logged adds SnapPoints and prevents landfill methane</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-slate-50 text-slate-700 uppercase tracking-wider font-semibold">
+                            <tr>
+                                <th class="p-4">Item Name</th>
+                                <th class="p-4">Bin Selected</th>
+                                <th class="p-4">Condition</th>
+                                <th class="p-4">Points Earned</th>
+                                <th class="p-4">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="impact-log-tbody" class="divide-y divide-slate-100">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= ABOUT TAB ================= -->
+        <section id="tab-about" class="tab-content hidden max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+            
+            <div class="bg-gradient-to-r from-eco-800 to-teal-800 text-white p-8 sm:p-12 rounded-3xl shadow-xl space-y-4">
+                <span class="bg-eco-500/20 text-eco-200 border border-eco-400/30 text-xs font-bold px-3 py-1 rounded-full">
+                    Ben's Bites Hackathon Project
+                </span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                    The EcoSnap Story &amp; Vision
+                </h2>
+                <p class="text-eco-100/90 text-sm sm:text-base leading-relaxed">
+                    EcoSnap was built by <strong>Alyssa X &amp; Leo</strong> during the <em>Ben's Bites Hackathon</em> to eliminate point-of-disposal confusion. By combining lightweight edge AI vision with gamified **SnapPoints**, EcoSnap empowers students to sort waste correctly in less than a second.
+                </p>
+            </div>
+
+            <!-- Tech Stack Showcase -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="p-6 rounded-3xl bg-white border border-eco-100 shadow-sm space-y-3">
+                    <div class="w-12 h-12 rounded-2xl bg-eco-100 text-eco-700 flex items-center justify-center font-bold text-xl">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg">YOLOv11 Edge AI</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Quantized TensorFlow Lite model (`best_float32.tflite`) runs directly inside client browsers. Zero cloud latency and high privacy.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-3xl bg-white border border-eco-100 shadow-sm space-y-3">
+                    <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xl">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800">SnapPoints Gamification</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Instant point feedback (+10 per correct bin, +25 daily streak, +50 per 10 items) creates positive behavioral reinforcement.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-3xl bg-white border border-eco-100 shadow-sm space-y-3">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xl">
+                        <i class="fa-solid fa-recycle"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800">Smart Bin Synergy</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Interfaces directly with 4-compartment automated hardware bins featuring 2.31s mechanical tilting actuation.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Level Progression Matrix -->
+            <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <h3 class="text-xl font-bold text-slate-800 text-center">SnapPoints Level Progression Matrix</h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-center text-xs">
+                    <div class="p-4 rounded-2xl bg-eco-50 border border-eco-200">
+                        <div class="font-bold text-eco-900">Level 1</div>
+                        <div class="text-eco-700 font-semibold my-1">Eco Novice 🌱</div>
+                        <div class="text-[10px] text-slate-500">0 - 500 Pts</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-teal-50 border border-teal-200">
+                        <div class="font-bold text-teal-900">Level 3</div>
+                        <div class="text-teal-700 font-semibold my-1">Waste Wrangler 🧹</div>
+                        <div class="text-[10px] text-slate-500">500 - 1,200 Pts</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                        <div class="font-bold text-emerald-900">Level 5</div>
+                        <div class="text-emerald-700 font-semibold my-1">Eco Explorer 🌱</div>
+                        <div class="text-[10px] text-slate-500">1,200 - 2,000 Pts</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 ring-2 ring-amber-400">
+                        <div class="font-bold text-amber-900">Level 8 (You)</div>
+                        <div class="text-amber-700 font-bold my-1">Green Guardian 🌿</div>
+                        <div class="text-[10px] text-slate-500">2,000 - 3,500 Pts</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-purple-50 border border-purple-200">
+                        <div class="font-bold text-purple-900">Level 10+</div>
+                        <div class="text-purple-700 font-semibold my-1">Planet Champion 🌎</div>
+                        <div class="text-[10px] text-slate-500">3,500+ Pts</div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- CELEBRATION / REWARD MODAL POPUP -->
+    <div id="reward-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl border-2 border-eco-400 transform transition-all scale-95 opacity-0" id="reward-modal-card">
+            
+            <div class="w-16 h-16 rounded-full bg-eco-100 text-eco-600 flex items-center justify-center text-3xl font-extrabold mx-auto shadow-md">
+                <i id="reward-modal-icon" class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div>
+                <span id="reward-modal-badge" class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-amber-300 uppercase">
+                    Perfect Sorting!
+                </span>
+                <h3 id="reward-modal-title" class="text-2xl font-black text-slate-800 mt-1">+10 SnapPoints ♻️</h3>
+                <p id="reward-modal-desc" class="text-xs text-slate-500 mt-1">You placed PET Plastic Bottle into the Blue Bin!</p>
+            </div>
+
+            <!-- Points Breakdown Box -->
+            <div id="reward-modal-breakdown" class="p-3 bg-eco-50 rounded-2xl border border-eco-200 text-xs text-eco-900 font-semibold space-y-1">
+                <!-- Injected dynamically -->
+            </div>
+
+            <button onclick="closeRewardModal()" class="w-full py-3 bg-gradient-to-r from-eco-600 to-teal-600 hover:from-eco-700 hover:to-teal-700 text-white font-extrabold rounded-xl text-xs shadow-md transition-all">
+                Continue Playing 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-white border-t border-slate-800 mt-16 py-8 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-eco-500 flex items-center justify-center text-slate-950 font-bold">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                <span class="font-extrabold text-sm text-eco-400">EcoSnap</span>
+                <span class="text-slate-500">| SnapPoints Gamified Recycling</span>
+            </div>
+
+            <p class="text-slate-400 text-center">
+                Created by Alyssa X &amp; Leo for Ben's Bites Hackathon • Campus Circular Economy Initiative
+            </p>
+
+            <div class="flex gap-3 text-slate-400">
+                <button onclick="switchTab('home')" class="hover:text-eco-400">Home</button>
+                <button onclick="switchTab('scan')" class="hover:text-eco-400">Scan</button>
+                <button onclick="switchTab('leaderboard')" class="hover:text-eco-400">Leaderboard</button>
+                <button onclick="switchTab('impact')" class="hover:text-eco-400">Impact</button>
+            </div>
+        </div>
+    </footer>
+</div>
+<div id="toast-box" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- JAVASCRIPT GAMIFICATION & APPLICATION ENGINE -->
+    <script>
+        // Preset Waste Items Database
+        const WASTE_DATABASE = {
+            bottle: {
+                name: "PET Plastic Bottle (#1)",
+                confidence: "98.4%",
+                correctBin: "blue",
+                correctBinName: "Blue Bin - Dry Recyclables",
+                condition: "Liquid Residue Inside",
+                conditionWarning: "Dirty / Unwashed bottle detected. Rinsing yields +5 bonus points!",
+                co2: 0.18,
+                weight: 0.05,
+                category: "Plastics",
+                img: "https://images.unsplash.com/photo-1528323273322-d81458248d40?auto=format&fit=crop&w=700&q=80",
+                bboxText: "PET Plastic Bottle (98.4%)"
+            },
+            pizzabox: {
+                name: "Greasy Pizza Box",
+                confidence: "94.2%",
+                correctBin: "green",
+                correctBinName: "Green Bin - Organic / Compost",
+                condition: "Grease Contaminated",
+                conditionWarning: "Soiled bottom cardboard cannot be recycled! Compost dirty part in Green Bin.",
+                co2: 0.22,
+                weight: 0.25,
+                category: "Paper",
+                img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=700&q=80",
+                bboxText: "Greasy Cardboard (94.2%)"
+            },
+            battery: {
+                name: "AA Alkaline Battery",
+                confidence: "99.1%",
+                correctBin: "yellow",
+                correctBinName: "Yellow Bin - Hazardous / E-Waste",
+                condition: "Intact Heavy Metal",
+                conditionWarning: "Contains toxic metals! Tape terminals before dropping in Yellow bin.",
+                co2: 0.35,
+                weight: 0.03,
+                category: "Hazardous",
+                img: "https://images.unsplash.com/photo-1619725002198-6a689b72f41d?auto=format&fit=crop&w=700&q=80",
+                bboxText: "AA Battery (99.1%)"
+            },
+            can: {
+                name: "Aluminum Soda Can",
+                confidence: "97.6%",
+                correctBin: "blue",
+                correctBinName: "Blue Bin - Metals & Recyclables",
+                condition: "Clean Empty Metal",
+                conditionWarning: "Clean & ready! Crush vertically to save 70% bin volume.",
+                co2: 0.31,
+                weight: 0.04,
+                category: "Metals",
+                img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=700&q=80",
+                bboxText: "Aluminum Can (97.6%)"
+            },
+            apple: {
+                name: "Organic Apple Core",
+                confidence: "96.8%",
+                correctBin: "green",
+                correctBinName: "Green Bin - Organic / Compost",
+                condition: "Biodegradable Food",
+                conditionWarning: "Organic waste! Diverts methane gas from landfills into fertile soil.",
+                co2: 0.12,
+                weight: 0.08,
+                category: "Organic",
+                img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=700&q=80",
+                bboxText: "Apple Core (96.8%)"
+            },
+            circuit: {
+                name: "E-Waste Circuit Board",
+                confidence: "98.9%",
+                correctBin: "yellow",
+                correctBinName: "Yellow Bin - E-Waste",
+                condition: "Electronic Component",
+                conditionWarning: "E-Waste hazard! Specialized recycling recovers copper and rare silver.",
+                co2: 0.45,
+                weight: 0.12,
+                category: "Hazardous",
+                img: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=700&q=80",
+                bboxText: "E-Waste Circuit (98.9%)"
+            }
+        };
+
+        // Player State (Gamification System)
+        let playerState = {
+            snapPoints: 4260, // User starts with 4,260 initial SnapPoints per prompt choice
+            level: 8,
+            title: "Green Guardian 🌿",
+            streak: 5,
+            itemsSorted: 14,
+            co2Saved: 2.82,
+            hasRinsedCurrent: false,
+            scanLog: [
+                { name: "PET Plastic Bottle (#1)", bin: "Blue Bin", condition: "Rinsed", co2: 0.18, points: 15, time: "2 mins ago" },
+                { name: "Aluminum Soda Can", bin: "Blue Bin", condition: "Clean", co2: 0.31, points: 10, time: "1 hour ago" },
+                { name: "Greasy Pizza Box", bin: "Green Bin", condition: "Composted", co2: 0.22, points: 10, time: "3 hours ago" },
+                { name: "Organic Apple Core", bin: "Green Bin", condition: "Organic", co2: 0.12, points: 10, time: "1 day ago" }
+            ]
+        };
+
+        // Leaderboard Dataset
+        let leaderboardData = [
+            { rank: 1, name: "Alex", title: "Planet Champion 🌎", points: 4820, avatar: "🥇" },
+            { rank: 2, name: "Rahul", title: "Planet Champion 🌎", points: 4510, avatar: "🥈" },
+            { rank: 3, name: "You (Current Player)", title: "Green Guardian 🌿", points: 4260, avatar: "🥉", isUser: true },
+            { rank: 4, name: "Priya", title: "Eco Explorer 🌱", points: 3890, avatar: "⭐" },
+            { rank: 5, name: "Sam", title: "Waste Wrangler 🧹", points: 3450, avatar: "⭐" }
+        ];
+
+        let currentActiveItem = WASTE_DATABASE.bottle;
+        let chartInstance = null;
+        let isWebcamLive = false;
+
+        // Navigation Tab Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-eco-800', 'bg-eco-50', 'shadow-sm');
+                btn.classList.add('text-slate-600');
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('text-eco-800', 'bg-eco-50', 'shadow-sm');
+                activeBtn.classList.remove('text-slate-600');
+            }
+
+            if (tabId === 'leaderboard') renderLeaderboard();
+            if (tabId === 'impact') renderImpactDashboard();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // Gamification HUD & Progression Updater
+        function updatePlayerHUD() {
+            // Level Title mapping calculation
+            let pts = playerState.snapPoints;
+            let level = 1;
+            let title = "Eco Novice 🌱";
+            let nextLevelPts = 500;
+
+            if (pts >= 3500) {
+                level = 10;
+                title = "Planet Champion 🌎";
+                nextLevelPts = 5000;
+            } else if (pts >= 2000) {
+                level = 8;
+                title = "Green Guardian 🌿";
+                nextLevelPts = 3500;
+            } else if (pts >= 1200) {
+                level = 5;
+                title = "Eco Explorer 🌱";
+                nextLevelPts = 2000;
+            } else if (pts >= 500) {
+                level = 3;
+                title = "Waste Wrangler 🧹";
+                nextLevelPts = 1200;
+            }
+
+            playerState.level = level;
+            playerState.title = title;
+
+            // DOM Updates
+            document.getElementById('hud-snappoints').innerText = pts.toLocaleString();
+            document.getElementById('hud-level-badge').innerHTML = `<i class="fa-solid fa-star"></i> Lvl ${level}`;
+            document.getElementById('hud-level-title').innerText = title;
+
+            // Home Stats
+            document.getElementById('home-stat-points').innerText = pts.toLocaleString();
+            document.getElementById('home-stat-items').innerText = `${playerState.itemsSorted} Items`;
+            document.getElementById('home-stat-co2').innerText = `${playerState.co2Saved.toFixed(2)} kg`;
+
+            // Calculate Progress Bar %
+            let prevLevelPts = level === 8 ? 2000 : (level === 5 ? 1200 : 500);
+            let progressPct = Math.min(100, Math.max(10, Math.round(((pts - prevLevelPts) / (nextLevelPts - prevLevelPts)) * 100)));
+            document.getElementById('hud-level-progress').style.width = `${progressPct}%`;
+            document.getElementById('hud-progress-text').innerText = `${progressPct}%`;
+
+            // Sync User Score in Leaderboard
+            const userLbEntry = leaderboardData.find(item => item.isUser);
+            if (userLbEntry) {
+                userLbEntry.points = pts;
+                userLbEntry.title = title;
+            }
+
+            // Re-sort leaderboard by points descending
+            leaderboardData.sort((a, b) => b.points - a.points);
+            leaderboardData.forEach((item, index) => item.rank = index + 1);
+
+            const updatedUserRank = leaderboardData.find(item => item.isUser).rank;
+            document.getElementById('home-stat-rank').innerText = `#${updatedUserRank} Campus`;
+        }
+
+        // Add Points with Animated Particle Effect
+        function addSnapPoints(amount, sourceReason) {
+            playerState.snapPoints += amount;
+            updatePlayerHUD();
+            triggerFloatingPointsAnim(`+${amount} SnapPoints ♻️`);
+        }
+
+        // Floating Points Particles
+        function triggerFloatingPointsAnim(text) {
+            const container = document.getElementById('floating-points-container');
+            const el = document.createElement('div');
+            el.className = 'absolute font-black text-amber-300 text-lg bg-slate-900/90 px-4 py-2 rounded-2xl border-2 border-amber-400 shadow-2xl animate-float-points pointer-events-none z-50 flex items-center gap-1.5';
+            el.innerHTML = `<span>⚡</span> ${text}`;
+
+            // Randomize position near top center / HUD
+            el.style.left = `${Math.random() * 40 + 30}%`;
+            el.style.top = `20%`;
+
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 1200);
+        }
+
+        // Scan Game Modes
+        function setScanMode(mode) {
+            const presetBar = document.getElementById('scanner-presets-bar');
+            const fileZone = document.getElementById('scanner-file-zone');
+            const camStream = document.getElementById('webcam-stream');
+            const activeImg = document.getElementById('scanner-active-img');
+
+            if (mode === 'preset') {
+                presetBar.classList.remove('hidden');
+                fileZone.classList.add('hidden');
+                camStream.classList.add('hidden');
+                activeImg.classList.remove('hidden');
+            } else if (mode === 'file') {
+                presetBar.classList.add('hidden');
+                fileZone.classList.remove('hidden');
+                camStream.classList.add('hidden');
+                activeImg.classList.remove('hidden');
+            } else if (mode === 'cam') {
+                presetBar.classList.remove('hidden');
+                fileZone.classList.add('hidden');
+                toggleLiveCamera();
+            }
+        }
+
+        // Preset Item Loader
+        function loadScanPreset(key) {
+            const item = WASTE_DATABASE[key];
+            if (!item) return;
+
+            currentActiveItem = item;
+            playerState.hasRinsedCurrent = false;
+
+            document.getElementById('scanner-active-img').src = item.img;
+            document.getElementById('scan-res-name').innerText = item.name;
+            document.getElementById('scan-res-confidence').innerText = `${item.confidence} Confidence`;
+            document.getElementById('scan-res-condition-text').innerText = item.conditionWarning;
+            document.getElementById('ai-bbox-text').innerText = item.bboxText;
+
+            // Reset rinse button text
+            const rinseBtn = document.getElementById('rinse-btn');
+            rinseBtn.classList.remove('bg-emerald-600', 'text-white');
+            rinseBtn.classList.add('bg-amber-500', 'text-slate-950');
+            rinseBtn.innerHTML = `<i class="fa-solid fa-soap mr-1"></i> Rinse First (+5 Pts)`;
+
+            showToast(`Loaded item: ${item.name}`, 'info');
+        }
+
+        function applyRinseBonus() {
+            if (playerState.hasRinsedCurrent) {
+                showToast('Item already rinsed!', 'info');
+                return;
+            }
+            playerState.hasRinsedCurrent = true;
+            addSnapPoints(5, "Rinse Bonus");
+
+            const rinseBtn = document.getElementById('rinse-btn');
+            rinseBtn.classList.remove('bg-amber-500', 'text-slate-950');
+            rinseBtn.classList.add('bg-emerald-600', 'text-white');
+            rinseBtn.innerHTML = `<i class="fa-solid fa-check mr-1"></i> Rinsed (+5 Pts Added)`;
+
+            document.getElementById('scan-res-condition-text').innerText = "Rinsed & Cleaned! Clean materials prevent batch recycling contamination.";
+            showToast('+5 SnapPoints Bonus earned for rinsing item!', 'success');
+        }
+
+        // SUBMIT BIN CHOICE MINI-GAME CORE LOGIC
+        function submitBinChoice(selectedBinColor) {
+            const correctColor = currentActiveItem.correctBin;
+
+            if (selectedBinColor === correctColor) {
+                // CORRECT BIN PLACEMENT!
+                playerState.itemsSorted++;
+                playerState.co2Saved += currentActiveItem.co2;
+
+                let pointsEarned = 10;
+                let bonusMessages = ["+10 SnapPoints for correct bin placement!"];
+
+                // Check 10-item streak bonus
+                if (playerState.itemsSorted % 10 === 0) {
+                    pointsEarned += 50;
+                    bonusMessages.push("🔥 10-Item Streak Bonus: +50 SnapPoints!");
+                }
+
+                addSnapPoints(pointsEarned, "Correct Bin");
+
+                // Trigger Confetti Celebration
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+
+                // Add to Log
+                playerState.scanLog.unshift({
+                    name: currentActiveItem.name,
+                    bin: `${selectedBinColor.toUpperCase()} Bin`,
+                    condition: playerState.hasRinsedCurrent ? "Rinsed (+5 Pts)" : "Standard",
+                    co2: currentActiveItem.co2,
+                    points: pointsEarned,
+                    time: "Just now"
+                });
+
+                // Show Celebration Modal
+                openRewardModal(
+                    `+${pointsEarned} SnapPoints ♻️`,
+                    `Awesome! ${currentActiveItem.name} correctly placed in the ${currentActiveItem.correctBinName}.`,
+                    bonusMessages
+                );
+
+            } else {
+                // INCORRECT BIN CHOICE
+                showToast(`Incorrect bin! ${currentActiveItem.name} belongs in the ${currentActiveItem.correctBinName}. Try again!`, 'error');
+            }
+        }
+
+        // Quiz Answer
+        function handleHomeQuizAnswer(colorChoice) {
+            if (colorChoice === 'green') {
+                confetti({ particleCount: 50, spread: 60 });
+                addSnapPoints(10, "Quiz Bonus");
+                showToast("Correct! Greasy pizza box cardboard cannot be recycled and goes to Green Compost! +10 SnapPoints!", "success");
+            } else {
+                showToast("Not quite! Soiled greasy cardboard goes in the Green Bin for composting.", "info");
+            }
+        }
+
+        // Live Camera Toggle
+        async function toggleLiveCamera() {
+            const video = document.getElementById('webcam-stream');
+            const img = document.getElementById('scanner-active-img');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.classList.remove('hidden');
+                img.classList.add('hidden');
+                isWebcamLive = true;
+                showToast("Webcam active. Point camera at waste item.", "success");
+            } catch (err) {
+                showToast("Camera access unavailable. Using preset simulator.", "info");
+            }
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    document.getElementById('scanner-active-img').src = evt.target.result;
+                    setScanMode('preset');
+                    loadScanPreset('bottle');
+                    showToast("Uploaded photo analyzed by AI model", "success");
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Reward Modal Controls
+        function openRewardModal(title, desc, breakdownList) {
+            const modal = document.getElementById('reward-modal');
+            const card = document.getElementById('reward-modal-card');
+
+            document.getElementById('reward-modal-title').innerText = title;
+            document.getElementById('reward-modal-desc').innerText = desc;
+
+            const bdBox = document.getElementById('reward-modal-breakdown');
+            bdBox.innerHTML = breakdownList.map(msg => `<div>• ${msg}</div>`).join('');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                card.classList.remove('scale-95', 'opacity-0');
+                card.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeRewardModal() {
+            const modal = document.getElementById('reward-modal');
+            const card = document.getElementById('reward-modal-card');
+
+            card.classList.remove('scale-100', 'opacity-100');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        // Leaderboard Renderer
+        function renderLeaderboard() {
+            const tbody = document.getElementById('leaderboard-tbody');
+            tbody.innerHTML = leaderboardData.map((user) => `
+                <tr class="${user.isUser ? 'bg-eco-50/80 font-bold border-l-4 border-eco-600' : 'hover:bg-slate-50'} transition-colors">
+                    <td class="py-3.5 px-3">
+                        <span class="text-base">${user.avatar}</span>
+                        <span class="font-extrabold text-slate-700 ml-1">#${user.rank}</span>
+                    </td>
+                    <td class="py-3.5 px-3 font-bold ${user.isUser ? 'text-eco-900' : 'text-slate-800'}">
+                        ${user.name} ${user.isUser ? '<span class="text-[10px] bg-eco-200 text-eco-900 px-1.5 py-0.5 rounded ml-1">YOU</span>' : ''}
+                    </td>
+                    <td class="py-3.5 px-3 text-slate-500 font-medium">${user.title}</td>
+                    <td class="py-3.5 px-3 text-right font-black text-emerald-700">${user.points.toLocaleString()} pts</td>
+                </tr>
+            `).join('');
+        }
+
+        // Impact Dashboard Renderer
+        function renderImpactDashboard() {
+            document.getElementById('impact-stat-points').innerText = playerState.snapPoints.toLocaleString();
+            document.getElementById('impact-stat-co2').innerText = `${playerState.co2Saved.toFixed(2)} kg`;
+            document.getElementById('impact-stat-landfill').innerText = `${(playerState.itemsSorted * 0.12).toFixed(2)} kg`;
+
+            // Table log
+            const tbody = document.getElementById('impact-log-tbody');
+            tbody.innerHTML = playerState.scanLog.map(log => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-4 font-bold text-slate-800">${log.name}</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full bg-eco-100 text-eco-800 font-bold">${log.bin}</span></td>
+                    <td class="p-4 text-slate-500">${log.condition}</td>
+                    <td class="p-4 font-bold text-amber-600">+${log.points} SnapPoints</td>
+                    <td class="p-4 text-slate-400">${log.time}</td>
+                </tr>
+            `).join('');
+
+            renderImpactChart();
+        }
+
+        function renderImpactChart() {
+            const ctx = document.getElementById('impactDoughnutChart');
+            if (!ctx) return;
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Plastics', 'Paper & Cardboard', 'Metals', 'Organic', 'Hazardous E-Waste'],
+                    datasets: [{
+                        data: [42, 28, 15, 10, 5],
+                        backgroundColor: ['#4caf50', '#f59e0b', '#3b82f6', '#84cc16', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { family: 'Plus Jakarta Sans', size: 11 } } }
+                    },
+                    cutout: '68%'
+                }
+            });
+        }
+
+        function addRandomImpactLog() {
+            const keys = Object.keys(WASTE_DATABASE);
+            const item = WASTE_DATABASE[keys[Math.floor(Math.random() * keys.length)]];
+
+            playerState.itemsSorted++;
+            playerState.co2Saved += item.co2;
+            addSnapPoints(10, "Simulated Sort");
+
+            playerState.scanLog.unshift({
+                name: item.name,
+                bin: item.correctBinName.split(' - ')[0],
+                condition: "Simulated",
+                co2: item.co2,
+                points: 10,
+                time: "Just now"
+            });
+
+            renderImpactDashboard();
+            showToast(`Simulated sort logged: ${item.name}`, 'info');
+        }
+
+        function resetImpactData() {
+            playerState.scanLog = [];
+            renderImpactDashboard();
+            showToast('Impact history log cleared', 'info');
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-box');
+            const toast = document.createElement('div');
+
+            let bgClass = 'bg-slate-900 text-white';
+            let icon = 'fa-info-circle text-blue-400';
+
+            if (type === 'success') {
+                bgClass = 'bg-eco-900 text-white border border-eco-400';
+                icon = 'fa-circle-check text-emerald-400';
+            } else if (type === 'error') {
+                bgClass = 'bg-red-950 text-white border border-red-500';
+                icon = 'fa-triangle-exclamation text-red-400';
+            }
+
+            toast.className = `${bgClass} pointer-events-auto px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2.5 transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        // Init App On Load
+        window.onload = function() { Auth.boot(); };
+    
+        // ===== AUTH & SESSION (front-end only: swap storage calls for your API) =====
+        const Auth = (() => {
+            const $ = id => document.getElementById(id);
+            const KU = 'ecosnap.users', KS = 'ecosnap.session', KP = 'ecosnap.progress.';
+            const mem = {};
+            const probe = n => { try { const x = window[n]; x.setItem('_t', '1'); x.removeItem('_t'); return x; } catch (e) { return null; } };
+            const LS = probe('localStorage'), SS = probe('sessionStorage');
+            const get = (k, st) => { try { const t = st || LS; const v = t ? t.getItem(k) : mem[k]; return v ? JSON.parse(v) : null; } catch (e) { return null; } };
+            const put = (k, v, st) => { const j = JSON.stringify(v); try { const t = st || LS; t ? t.setItem(k, j) : (mem[k] = j); } catch (e) { mem[k] = j; } };
+            const del = k => { [LS, SS].forEach(t => { try { t && t.removeItem(k); } catch (e) {} }); delete mem[k]; };
+            let mode = 'login', cur = null, fails = 0, lock = 0;
+            const clean = n => String(n).replace(/[<>&"'`]/g, '').replace(/\s+/g, ' ').trim();
+            const strongEnough = p => p.length >= 8 && /[a-z]/i.test(p) && /\d/.test(p);
+
+            async function hash(pw, salt) {
+                try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + pw)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+                catch (e) { let h = 5381; for (const c of salt + pw) h = (h * 33) ^ c.charCodeAt(0); return 'f' + (h >>> 0); }
+            }
+            function err(m) { const b = $('auth-error'); b.textContent = m; b.classList.toggle('hidden', !m); }
+            function busy(on) { $('auth-submit').disabled = on; $('auth-spin').classList.toggle('hidden', !on); $('auth-spin').classList.toggle('fa-spin', on); }
+            function go(v, m) {
+                ['landing', 'auth'].forEach(x => $('view-' + x).classList.toggle('hidden', x !== v));
+                $('app-shell').classList.add('hidden');
+                if (v === 'auth') setMode(m || 'login');
+                window.scrollTo(0, 0);
+            }
+            function setMode(m) {
+                mode = m; const su = m === 'signup'; err('');
+                $('auth-name-wrap').classList.toggle('hidden', !su);
+                $('auth-remember-wrap').classList.toggle('hidden', su);
+                $('auth-title').textContent = su ? 'Create your account' : 'Sign in to EcoSnap';
+                $('auth-sub').textContent = su ? 'Start earning SnapPoints in under a minute.' : 'Welcome back. Your points and streak are waiting.';
+                $('auth-submit-label').textContent = su ? 'Create account' : 'Sign in';
+                $('auth-pw').autocomplete = su ? 'new-password' : 'current-password';
+                ['login', 'signup'].forEach(t => {
+                    const on = t === m, b = $('tab-' + t);
+                    b.setAttribute('aria-selected', on);
+                    b.className = 'flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors ' + (on ? 'bg-white text-eco-800 shadow-sm' : 'text-slate-600 hover:text-eco-800');
+                });
+                hint();
+                setTimeout(() => $(su ? 'auth-name' : 'auth-email').focus(), 50);
+            }
+            function hint() {
+                const p = $('auth-pw').value, ok = strongEnough(p), strong = ok && (p.length >= 12 || /[^a-z\d]/i.test(p)), h = $('pw-hint');
+                h.classList.toggle('hidden', mode !== 'signup');
+                h.textContent = !p ? 'Use 8 or more characters with a letter and a number.' : strong ? 'Strong password.' : ok ? 'Good. Add a symbol or more length to make it stronger.' : 'Keep going: 8 or more characters with a letter and a number.';
+                h.className = 'text-xs mt-1.5 ' + (ok ? 'text-eco-700 font-semibold' : 'text-slate-500') + (mode === 'signup' ? '' : ' hidden');
+            }
+            function pwToggle() {
+                const i = $('auth-pw'), show = i.type === 'password';
+                i.type = show ? 'text' : 'password';
+                $('pw-eye').className = 'fa-solid ' + (show ? 'fa-eye-slash' : 'fa-eye');
+                $('pw-toggle').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            }
+            async function submit(ev) {
+                ev.preventDefault(); err('');
+                const email = $('auth-email').value.trim().toLowerCase(), pw = $('auth-pw').value, name = clean($('auth-name').value);
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return err('Enter a valid email address, like name@college.edu.');
+                if (mode === 'signup' && name.length < 2) return err('Enter your name so it can appear on the leaderboard.');
+                if (!pw) return err('Enter your password.');
+                if (mode === 'signup' && !strongEnough(pw)) return err('Use at least 8 characters, including a letter and a number.');
+                if (Date.now() < lock) return err(`Too many attempts. Try again in ${Math.ceil((lock - Date.now()) / 1000)} seconds.`);
+                busy(true);
+                try {
+                    await new Promise(r => setTimeout(r, 450));
+                    const users = get(KU) || {};
+                    if (mode === 'signup') {
+                        if (users[email]) return err('An account with this email already exists. Sign in instead.');
+                        const salt = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+                        users[email] = { name, salt, hash: await hash(pw, salt), created: Date.now() };
+                        put(KU, users);
+                        start({ email, name }, true, true);
+                    } else {
+                        const u = users[email];
+                        if (!u || u.hash !== await hash(pw, u.salt)) {
+                            if (++fails >= 5) { lock = Date.now() + 30000; fails = 0; }
+                            return err('Email or password is incorrect.');
+                        }
+                        fails = 0;
+                        start({ email, name: u.name }, $('auth-remember').checked, false);
+                    }
+                } finally { busy(false); }
+            }
+            function start(u, remember, isNew) {
+                put(KS, { email: u.email, name: u.name, guest: !!u.guest, exp: Date.now() + (remember ? 7 : 1) * 864e5 }, remember ? LS : SS);
+                enter(u, isNew);
+            }
+            function demo() { start({ email: 'demo@ecosnap.app', name: 'Demo Player', guest: true }, false, false); }
+            function enter(u, isNew) {
+                cur = u; u.name = clean(u.name) || 'Player';
+                ['landing', 'auth'].forEach(x => $('view-' + x).classList.add('hidden'));
+                $('app-shell').classList.remove('hidden');
+                $('auth-form').reset();
+                const saved = !u.guest && get(KP + u.email);
+                if (saved) Object.assign(playerState, saved);
+                const me = leaderboardData.find(x => x.isUser); if (me) me.name = u.name;
+                const ini = u.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+                const fill = (c, v) => document.querySelectorAll(c).forEach(e => e.textContent = v);
+                fill('.u-ini', ini); fill('.u-name', u.name); fill('.u-first', u.name.split(' ')[0]); fill('.u-email', u.guest ? 'Demo session (progress not saved)' : u.email);
+                updatePlayerHUD(); loadScanPreset('bottle'); switchTab('home');
+                showToast(isNew ? `Welcome to EcoSnap, ${u.name.split(' ')[0]}!` : `Welcome back, ${u.name.split(' ')[0]}`, 'success');
+            }
+            function save() {
+                if (!cur || cur.guest) return;
+                const p = playerState;
+                put(KP + cur.email, { snapPoints: p.snapPoints, itemsSorted: p.itemsSorted, co2Saved: p.co2Saved, streak: p.streak, scanLog: p.scanLog });
+            }
+            function logout() { save(); del(KS); location.reload(); }
+            function menu(force) {
+                const m = $('user-menu'), open = force === undefined ? m.classList.contains('hidden') : force;
+                m.classList.toggle('hidden', !open); $('user-btn').setAttribute('aria-expanded', open);
+            }
+            function boot() {
+                const ses = get(KS, SS) || get(KS, LS), u = ses && (get(KU) || {})[ses.email];
+                if (ses && ses.exp > Date.now() && (ses.guest || u)) return enter({ email: ses.email, name: ses.guest ? ses.name : u.name, guest: ses.guest }, false);
+                del(KS); go('landing');
+            }
+            document.addEventListener('click', e => { if (!e.target.closest('#user-btn, #user-menu')) menu(false); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') menu(false); });
+            window.addEventListener('pagehide', save);
+            return { boot, go, setMode, hint, pwToggle, submit, demo, menu, logout, save };
+        })();
+
+        // Persist progress whenever the HUD refreshes
+        const _baseHud = updatePlayerHUD;
+        updatePlayerHUD = function () { _baseHud(); Auth.save(); };
+
+        // Remote photos can be blocked: show a branded placeholder instead of a broken image
+        document.addEventListener('error', e => {
+            const t = e.target;
+            if (t.tagName === 'IMG' && !t.dataset.fb) {
+                t.dataset.fb = '1';
+                t.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2e7d32"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs><rect width="700" height="500" fill="url(#g)"/><text x="350" y="285" font-size="130" text-anchor="middle">♻️</text></svg>');
+            }
+        }, true);
+    </script>
+</body>
+</html>
